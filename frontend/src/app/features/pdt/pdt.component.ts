@@ -4,14 +4,18 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AppHeaderComponent } from '../../shared/components/app-header/app-header.component';
 import { APP_ICONS } from '../../shared/icons/app-icons';
 import { AppRole, NotificationItem } from '../../shared/models/ui.models';
-
-type Tab = 'time' | 'topics' | 'allocation' | 'report';
-type ReportKey = 'topic01' | 'topic02';
+import { PdtAdminSidebarComponent } from './components/pdt-admin-sidebar.component';
+import { PdtTab, ReportKey, ReportSection, TopicItem, UnassignedStudent, AvailableGroup } from './pdt.models';
 
 @Component({
   selector: 'app-pdt',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, AppHeaderComponent],
+  imports: [
+    CommonModule,
+    LucideAngularModule,
+    AppHeaderComponent,
+    PdtAdminSidebarComponent,
+  ],
   templateUrl: './pdt.component.html',
 })
 export class PdtComponent {
@@ -21,7 +25,7 @@ export class PdtComponent {
   userBadge = 'PDT';
   showNotifications = false;
   notifications: NotificationItem[] = [];
-  activeTab: Tab = 'time';
+  activeTab: PdtTab = 'time';
   assignModalOpen = false;
   assignStudentName = '';
   reportItems: Record<ReportKey, boolean> = {
@@ -29,7 +33,7 @@ export class PdtComponent {
     topic02: false,
   };
 
-  readonly topics = [
+  readonly topics: TopicItem[] = [
     {
       title: 'Chuyên ngành gì đó',
       code: 'DT-001',
@@ -46,12 +50,12 @@ export class PdtComponent {
     },
   ];
 
-  readonly unassignedStudents = [
+  readonly unassignedStudents: UnassignedStudent[] = [
     { name: 'Phạm Văn D', studentId: '2011005', faculty: 'K.H.M.T' },
     { name: 'Lê Thị E', studentId: '2011006', faculty: 'K.H.M.T' },
   ];
 
-  readonly availableGroups = [
+  readonly availableGroups: AvailableGroup[] = [
     {
       title: 'Chuyên ngành gì đó',
       slots: 'Còn 2 chỗ',
@@ -74,7 +78,7 @@ export class PdtComponent {
     },
   ];
 
-  readonly reportSections = [
+  readonly reportSections: ReportSection[] = [
     {
       key: 'topic01' as const,
       badgeClass: 'bg-indigo-100 text-indigo-700',
@@ -138,7 +142,7 @@ export class PdtComponent {
     this.showNotifications = false;
   }
 
-  switchAdminTab(tabName: Tab): void {
+  switchAdminTab(tabName: PdtTab): void {
     this.activeTab = tabName;
   }
 

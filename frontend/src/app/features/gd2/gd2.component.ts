@@ -6,38 +6,22 @@ import { AppHeaderComponent } from '../../shared/components/app-header/app-heade
 import { ProjectTimelineComponent } from '../../shared/components/project-timeline/project-timeline.component';
 import { APP_ICONS } from '../../shared/icons/app-icons';
 import { AppRole, NotificationItem, TimelineStep } from '../../shared/models/ui.models';
-
-type Tab = 'pending' | 'accepted';
-type LecturerCardTone = 'blue' | 'purple' | 'slate';
-type RequestDecision = 'none' | 'approved' | 'rejected';
-
-interface RegistrationItem {
-  initials: string;
-  lecturer: string;
-  tag: string;
-  specialty: string;
-  quotaLabel: string;
-  quotaValue: string;
-  progress: number;
-  progressClass: string;
-  tone: LecturerCardTone;
-  full: boolean;
-  registered: boolean;
-}
-
-interface GroupItem {
-  name: string;
-  studentId: string;
-  specialization: string;
-  initials: string;
-  tone: LecturerCardTone;
-  decision: RequestDecision;
-}
+import { Gd2RegistrationCardComponent } from './components/gd2-registration-card.component';
+import { Gd2RequestCardComponent } from './components/gd2-request-card.component';
+import { Gd2Tab, GroupItem, RegistrationItem } from './gd2.models';
 
 @Component({
   selector: 'app-gd2',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, AppHeaderComponent, ProjectTimelineComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucideAngularModule,
+    AppHeaderComponent,
+    ProjectTimelineComponent,
+    Gd2RegistrationCardComponent,
+    Gd2RequestCardComponent,
+  ],
   templateUrl: './gd2.component.html',
 })
 export class Gd2Component {
@@ -46,7 +30,7 @@ export class Gd2Component {
   userBadge = 'SV';
   showNotifications = false;
   notifications: NotificationItem[] = [];
-  activeTab: Tab = 'pending';
+  activeTab: Gd2Tab = 'pending';
   searchTerm = '';
   readonly icons = APP_ICONS;
   readonly timeline: TimelineStep[] = [
@@ -201,7 +185,7 @@ export class Gd2Component {
     );
   }
 
-  switchLecturerTab(tab: Tab): void {
+  switchLecturerTab(tab: Gd2Tab): void {
     this.activeTab = tab;
   }
 
@@ -222,74 +206,6 @@ export class Gd2Component {
 
     group.decision = 'rejected';
     this.addNotification(`Bạn đã từ chối yêu cầu của <b>${group.name}</b>.`);
-  }
-
-  cardClass(item: RegistrationItem): string {
-    if (item.full) {
-      return 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm opacity-70 flex flex-col md:flex-row items-center justify-between gap-4';
-    }
-
-    if (item.tone === 'blue') {
-      return 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition flex flex-col md:flex-row items-center justify-between gap-4 group';
-    }
-
-    return 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 transition flex flex-col md:flex-row items-center justify-between gap-4 group';
-  }
-
-  initialsClass(tone: LecturerCardTone): string {
-    switch (tone) {
-      case 'blue':
-        return 'h-12 w-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold text-lg border border-blue-200';
-      case 'purple':
-        return 'h-12 w-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center font-bold text-lg border border-purple-100';
-      default:
-        return 'h-12 w-12 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center font-bold text-lg border border-slate-200';
-    }
-  }
-
-  tagClass(tone: LecturerCardTone): string {
-    switch (tone) {
-      case 'blue':
-        return 'bg-blue-50 text-blue-700 border border-blue-100 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded';
-      case 'purple':
-        return 'bg-purple-50 text-purple-700 border border-purple-100 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded';
-      default:
-        return 'bg-slate-100 text-slate-600 border border-slate-200 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded';
-    }
-  }
-
-  quotaValueClass(item: RegistrationItem): string {
-    if (item.progress >= 100) {
-      return 'text-red-600';
-    }
-    if (item.progress >= 60) {
-      return 'text-yellow-600';
-    }
-    return 'text-blue-600';
-  }
-
-  lecturerRequestCardClass(_group: GroupItem): string {
-    return 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group';
-  }
-
-  decisionBadgeClass(decision: RequestDecision): string {
-    return decision === 'approved'
-      ? 'px-4 py-2 text-xs font-bold text-green-600 bg-green-50 rounded-lg border border-green-200 w-full text-center'
-      : 'px-4 py-2 text-xs font-bold text-red-600 bg-red-50 rounded-lg border border-red-200 w-full text-center';
-  }
-
-  decisionLabel(decision: RequestDecision): string {
-    return decision === 'approved' ? 'Đã tiếp nhận' : 'Đã từ chối';
-  }
-
-  lecturerNameClass(item: RegistrationItem): string {
-    if (item.tone === 'blue') {
-      return 'group-hover:text-blue-600';
-    }
-    if (item.tone === 'purple') {
-      return 'group-hover:text-purple-600';
-    }
-    return '';
   }
 
   private addNotification(message: string): void {

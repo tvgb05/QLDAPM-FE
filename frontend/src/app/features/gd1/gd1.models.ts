@@ -10,7 +10,6 @@ export interface Specialization {
   icon: AppIconKey;
   accentIcon: AppIconKey;
   description: string;
-  selected: boolean;
 }
 
 export interface LecturerAssignment {

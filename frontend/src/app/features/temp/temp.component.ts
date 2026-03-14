@@ -7,6 +7,8 @@ import { ProjectTimelineComponent } from '../../shared/components/project-timeli
 import { APP_ICONS } from '../../shared/icons/app-icons';
 import { AppRole, NotificationItem, TimelineStep } from '../../shared/models/ui.models';
 
+type TempStatus = 'pending' | 'approved' | 'rejected';
+
 @Component({
   selector: 'app-temp',
   standalone: true,
@@ -20,7 +22,7 @@ export class TempComponent {
   userBadge = 'SV';
   showNotifications = false;
   notifications: NotificationItem[] = [{ message: 'Đề tài của nhóm đang chờ giảng viên phản hồi.' }];
-  status: 'pending' | 'approved' | 'rejected' = 'pending';
+  status: TempStatus = 'pending';
   rejectModalOpen = false;
   rejectReason = '';
   readonly timeline: TimelineStep[] = [

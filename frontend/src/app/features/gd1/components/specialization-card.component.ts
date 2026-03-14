@@ -17,8 +17,12 @@ export class SpecializationCardComponent {
 
   readonly icons = APP_ICONS;
 
+  get isSelected(): boolean {
+    return this.selectedSpecializationId === this.item.id;
+  }
+
   getCardClass(): string {
-    if (this.item.selected) {
+    if (this.isSelected) {
       return 'bg-blue-50 p-6 rounded-2xl border-2 border-blue-500 shadow-md transition group relative overflow-hidden h-full flex flex-col';
     }
 
@@ -30,7 +34,7 @@ export class SpecializationCardComponent {
   }
 
   getButtonClass(): string {
-    if (this.item.selected) {
+    if (this.isSelected) {
       return 'w-full py-3 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-lg shadow-blue-200 transition-all duration-300 flex items-center justify-center gap-2 mt-auto';
     }
 
@@ -42,7 +46,7 @@ export class SpecializationCardComponent {
   }
 
   getButtonLabel(): string {
-    if (this.item.selected) {
+    if (this.isSelected) {
       return 'Đã đăng ký';
     }
 

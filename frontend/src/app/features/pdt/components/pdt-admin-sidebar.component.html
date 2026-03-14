@@ -1,0 +1,24 @@
+<aside class="w-72 bg-white border-r border-slate-200 flex flex-col h-full overflow-y-auto shrink-0 shadow-sm z-10 hidden md:flex">
+  <div class="fade-in">
+    <div class="p-5 border-b border-slate-100">
+      <h3 class="font-bold text-slate-700 flex items-center gap-2 italic">
+        <lucide-icon [img]="icons.settings" class="w-5 h-5 text-red-600"></lucide-icon>
+        Quản trị hệ thống
+      </h3>
+    </div>
+    <div class="p-4 space-y-2">
+      @for (item of items; track item.key) {
+        <button
+          (click)="tabChange.emit(item.key)"
+          class="w-full text-left p-3 rounded-xl flex items-center gap-3 transition group"
+          [ngClass]="activeTab === item.key ? 'bg-slate-50 shadow-sm border border-slate-200' : 'hover:bg-slate-50'"
+        >
+          <div class="p-2 rounded-lg" [class]="item.iconBoxClass + ' ' + item.iconClass">
+            <lucide-icon [img]="icons[item.icon]" class="w-4 h-4"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-700" [class]="item.hoverTextClass">{{ item.label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+</aside>

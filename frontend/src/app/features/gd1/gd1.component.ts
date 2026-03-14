@@ -26,10 +26,16 @@ export class Gd1Component {
   readonly icons = APP_ICONS;
   role: Gd1Role = 'student';
   showNotifications = false;
-  userName = 'Nguyễn Văn A';
-  userBadge = 'SV';
   selectedSpecializationId: string | null = null;
   notifications: NotificationItem[] = [];
+
+  get userName(): string {
+    return this.role === 'lecturer' ? 'TS. Giảng viên A' : 'Nguyễn Văn A';
+  }
+
+  get userBadge(): string {
+    return this.role === 'lecturer' ? 'GV' : 'SV';
+  }
 
   readonly timeline: TimelineStep[] = [
     {
@@ -70,7 +76,6 @@ export class Gd1Component {
       accentIcon: 'layoutTemplate',
       description:
         'Phát triển ứng dụng Web, Mobile App, Kiến trúc phần mềm, Microservices, DevOps, Testing.',
-      selected: false,
     },
     {
       id: 'httt',
@@ -80,7 +85,6 @@ export class Gd1Component {
       accentIcon: 'database',
       description:
         'Phân tích dữ liệu, Data Mining, ERP, Quản trị cơ sở dữ liệu, Business Intelligence, E-commerce.',
-      selected: false,
     },
     {
       id: 'mang',
@@ -90,7 +94,6 @@ export class Gd1Component {
       accentIcon: 'shieldCheck',
       description:
         'Quản trị mạng, Pentest, Blockchain, IoT Security, Cloud Infrastructure, System Admin.',
-      selected: false,
     },
     {
       id: 'ai',
@@ -100,7 +103,6 @@ export class Gd1Component {
       accentIcon: 'brainCircuit',
       description:
         'Machine Learning, Deep Learning, Computer Vision, NLP, Generative AI, Data Science.',
-      selected: false,
     },
   ];
 
@@ -125,8 +127,6 @@ export class Gd1Component {
 
   switchRole(role: Gd1Role): void {
     this.role = role;
-    this.userName = role === 'lecturer' ? 'TS. Giảng viên A' : 'Nguyễn Văn A';
-    this.userBadge = role === 'lecturer' ? 'GV' : 'SV';
   }
 
   toggleNotifications(): void {
@@ -148,15 +148,11 @@ export class Gd1Component {
 
     if (this.selectedSpecializationId === target.id) {
       this.selectedSpecializationId = null;
-      target.selected = false;
       this.addNotification(`Bạn đã hủy đăng ký hướng chuyên ngành: ${target.name}`);
       return;
     }
 
     this.selectedSpecializationId = target.id;
-    for (const item of this.specializations) {
-      item.selected = item.id === target.id;
-    }
     this.addNotification(`Đăng ký thành công hướng chuyên ngành: ${target.name}`);
   }
 
