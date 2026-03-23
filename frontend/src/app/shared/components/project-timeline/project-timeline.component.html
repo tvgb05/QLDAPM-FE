@@ -1,0 +1,66 @@
+<aside
+  class="w-72 bg-white border-r border-slate-200 flex flex-col h-full overflow-y-auto shrink-0 shadow-sm z-10 hidden md:flex legacy-scroll"
+>
+  <div class="p-5 border-b border-slate-100">
+    <h3 class="font-bold text-slate-700 flex items-center gap-2">
+      <lucide-icon [img]="icons.map" class="w-5 h-5 text-blue-600"></lucide-icon>
+      Lộ trình Đồ án
+    </h3>
+    <p class="text-xs text-slate-400 mt-1">Niên khóa 2025-2026</p>
+  </div>
+
+  <div class="p-4 relative">
+    <div class="absolute left-7 top-6 bottom-6 w-0.5 bg-slate-200"></div>
+
+    @for (step of timeline; track step.step) {
+      <div class="relative pl-10" [class.pb-8]="!$last">
+        @if (step.completed) {
+          <div class="absolute left-1.5 top-0 w-6 h-6 bg-green-100 border-2 border-green-500 rounded-full flex items-center justify-center z-10">
+            <lucide-icon [img]="icons.check" class="w-3.5 h-3.5 text-green-600"></lucide-icon>
+          </div>
+        } @else if (step.active) {
+          <div class="absolute left-1.5 top-0 w-6 h-6 bg-blue-100 border-2 border-blue-600 rounded-full flex items-center justify-center z-10 shadow-lg shadow-blue-200">
+            <span class="text-[10px] font-bold" [class]="step.stepNumberClass ?? 'text-blue-600'">{{ step.step }}</span>
+          </div>
+        } @else {
+          <div class="absolute left-1.5 top-0 w-6 h-6 bg-slate-100 border-2 border-slate-300 rounded-full flex items-center justify-center z-10">
+            <span class="text-[10px] font-bold text-slate-500">{{ step.step }}</span>
+          </div>
+        }
+        <h4 class="text-sm font-bold" [class]="step.textClass">{{ step.title }}</h4>
+        <p class="text-xs" [class]="step.subtitleClass ?? (step.active ? 'text-slate-500 mb-1' : 'text-slate-400 mb-1')">
+          {{ step.subtitle }}
+        </p>
+        @if (step.badge) {
+          <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded" [class]="step.badgeClass">
+            {{ step.badge }}
+          </span>
+        }
+        @if (step.time) {
+          <div class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <lucide-icon [img]="icons.clock3" class="w-3 h-3"></lucide-icon>
+            {{ step.time }}
+          </div>
+        }
+        @if (step.children?.length) {
+          <div class="space-y-3 mt-3 border-l-2 border-slate-100 pl-3 ml-[-4px]">
+            @for (child of step.children; track child.title) {
+              <div class="relative pl-4">
+                <div
+                  class="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full ring-2 ring-white"
+                  [class]="child.outlined ? 'border border-slate-300 bg-white ring-0' : child.muted ? 'bg-slate-200' : 'bg-slate-300'"
+                ></div>
+                <p
+                  class="text-xs"
+                  [class]="child.emphasis ? 'font-bold text-slate-400 uppercase' : child.muted ? 'text-slate-400' : 'font-semibold text-slate-500'"
+                >
+                  {{ child.title }}
+                </p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</aside>

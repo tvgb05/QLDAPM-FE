@@ -1,0 +1,321 @@
+<div class="bg-slate-50 font-sans text-slate-800 flex flex-col min-h-screen overflow-hidden">
+  <app-header
+    [role]="role"
+    [userName]="userName"
+    [userBadge]="userBadge"
+    [notifications]="notifications"
+    [showNotifications]="showNotifications"
+    [showRoleSwitch]="false"
+    (toggleNotifications)="toggleNotifications()"
+    (clearNotifications)="clearNotifications()"
+  />
+
+  <div class="flex flex-1 overflow-hidden">
+    <app-pdt-admin-sidebar [activeTab]="activeTab" (tabChange)="switchAdminTab($event)" />
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50/50 legacy-scroll">
+      <div class="max-w-6xl mx-auto pb-10">
+        <div class="fade-in space-y-6">
+          @if (activeTab === 'time') {
+            <div class="space-y-6">
+              <div class="flex justify-between items-end">
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-800">Cấu hình thời gian đăng ký</h2>
+                  <p class="text-sm text-slate-500">Thiết lập thời gian mở/đóng cho 3 giai đoạn đăng ký.</p>
+                </div>
+                <button (click)="saveConfig()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+                  <lucide-icon [img]="icons.save" class="w-4 h-4"></lucide-icon>
+                  Lưu cấu hình
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div class="absolute top-0 right-0 p-4 opacity-5"><lucide-icon [img]="icons.calendar" class="w-16 h-16"></lucide-icon></div>
+                  <h3 class="font-bold text-blue-700 uppercase text-xs tracking-wider mb-4">Giai đoạn 1: Đăng ký nguyện vọng</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 mb-1">Ngày bắt đầu</label>
+                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value="2026-01-10" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 mb-1">Ngày kết thúc</label>
+                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value="2026-01-20" />
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div class="absolute top-0 right-0 p-4 opacity-5"><lucide-icon [img]="icons.refreshCw" class="w-16 h-16"></lucide-icon></div>
+                  <h3 class="font-bold text-orange-600 uppercase text-xs tracking-wider mb-4">Giai đoạn 2: Điều chỉnh & Đăng ký lại</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 mb-1">Ngày bắt đầu</label>
+                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value="2026-01-22" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 mb-1">Ngày kết thúc</label>
+                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value="2026-01-25" />
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div class="absolute top-0 right-0 p-4 opacity-5"><lucide-icon [img]="icons.circleCheck" class="w-16 h-16"></lucide-icon></div>
+                  <h3 class="font-bold text-green-600 uppercase text-xs tracking-wider mb-4">Giai đoạn 3: Thực hiện đồ án</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 mb-1">Ngày công bố</label>
+                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none" value="2026-01-30" />
+                    </div>
+                    <div class="pt-4">
+                      <div class="flex items-center gap-2 p-2 bg-green-50 text-green-700 rounded-lg text-xs">
+                        <lucide-icon [img]="icons.info" class="w-4 h-4"></lucide-icon>
+                        Hệ thống sẽ tự động gán sinh viên còn lại.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (activeTab === 'topics') {
+            <div class="space-y-6">
+              <div class="flex justify-between items-end">
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-800">Quản lý Đề tài & Phân công GV</h2>
+                  <p class="text-sm text-slate-500">Gán danh sách giảng viên chịu trách nhiệm cho từng đề tài.</p>
+                </div>
+                <button class="bg-orange-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow hover:bg-orange-700 flex items-center gap-2">
+                  <lucide-icon [img]="icons.plus" class="w-4 h-4"></lucide-icon>
+                  Thêm đề tài mới
+                </button>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
+                    <tr>
+                      <th class="px-6 py-4 w-1/3">Tên Đề tài</th>
+                      <th class="px-6 py-4">Khoa</th>
+                      <th class="px-6 py-4">Giảng viên phụ trách</th>
+                      <th class="px-6 py-4 text-center">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (topic of topics; track topic.code) {
+                      <tr class="hover:bg-slate-50 transition group">
+                        <td class="px-6 py-4">
+                          <p class="font-bold text-slate-700">{{ topic.title }}</p>
+                          <p class="text-xs text-slate-400 mt-1">Mã: {{ topic.code }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">
+                          <span class="px-2 py-1 rounded text-xs font-bold" [class]="topic.facultyClass">{{ topic.faculty }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="flex flex-wrap gap-2">
+                            @for (lecturer of topic.lecturers; track lecturer) {
+                              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                {{ lecturer }}
+                                <lucide-icon [img]="icons.x" class="w-3 h-3 cursor-pointer hover:text-red-500"></lucide-icon>
+                              </span>
+                            }
+                            <button class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-orange-100 hover:text-orange-600 transition" title="Thêm GV">
+                              <lucide-icon [img]="icons.plus" class="w-3 h-3"></lucide-icon>
+                            </button>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                          <button class="text-slate-400 hover:text-blue-600">
+                            <lucide-icon [img]="icons.pencilLine" class="w-4 h-4"></lucide-icon>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          @if (activeTab === 'allocation') {
+            <div class="space-y-6">
+              <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-800">Phân công Sinh viên (Giai đoạn 3)</h2>
+                  <p class="text-sm text-slate-500">Xử lý các sinh viên chưa có nhóm sau khi kết thúc đăng ký.</p>
+                </div>
+                <div class="flex gap-2">
+                  <div class="bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200">Còn 12 SV chưa có nhóm</div>
+                  <button class="bg-purple-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow hover:bg-purple-700 transition flex items-center gap-1">
+                    <lucide-icon [img]="icons.wandSparkles" class="w-3 h-3"></lucide-icon>
+                    Auto Phân công
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[600px]">
+                <div class="lg:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-700 text-sm">Chưa có nhóm</h3>
+                    <div class="relative">
+                      <input type="text" placeholder="Tìm MSSV..." class="w-32 pl-7 pr-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      <lucide-icon [img]="icons.search" class="w-3 h-3 text-slate-400 absolute left-2 top-1.5"></lucide-icon>
+                    </div>
+                  </div>
+                  <div class="flex-1 overflow-y-auto p-2 space-y-2 legacy-scroll">
+                    @for (student of unassignedStudents; track student.studentId) {
+                      <div class="p-3 rounded-xl border border-slate-100 hover:border-blue-300 hover:bg-blue-50 transition cursor-pointer group relative">
+                        <div class="flex justify-between items-start">
+                          <div>
+                            <p class="font-bold text-slate-700 text-sm">{{ student.name }}</p>
+                            <p class="text-xs text-slate-500">MSSV: {{ student.studentId }}</p>
+                            <p class="text-[10px] text-blue-600 mt-1 bg-blue-100 inline-block px-1.5 rounded">{{ student.faculty }}</p>
+                          </div>
+                          <button (click)="openAssignModal(student.name + ' - ' + student.studentId)" class="opacity-0 group-hover:opacity-100 bg-blue-600 text-white p-1.5 rounded-lg shadow-sm hover:scale-110 transition">
+                            <lucide-icon [img]="icons.arrowRight" class="w-4 h-4"></lucide-icon>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="lg:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div class="p-4 border-b border-slate-100 bg-slate-50">
+                    <h3 class="font-bold text-slate-700 text-sm">Các nhóm Đề tài khả dụng (Còn slot)</h3>
+                  </div>
+                  <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 legacy-scroll">
+                    @for (group of availableGroups; track group.title) {
+                      <div class="p-4 rounded-xl border border-slate-200 hover:shadow-md transition bg-white">
+                        <div class="flex justify-between items-start mb-2">
+                          <h4 class="font-bold text-slate-700 text-sm line-clamp-1">{{ group.title }}</h4>
+                          <span class="text-[10px] px-2 py-0.5 rounded-full font-bold" [class]="group.slotsClass">{{ group.slots }}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3 line-clamp-2">{{ group.lecturers }}</p>
+                        <div class="flex -space-x-2 mb-3">
+                          @for (member of group.members; track member) {
+                            <div class="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[8px] font-bold">{{ member }}</div>
+                          }
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 mb-1">
+                          <div class="h-1.5 rounded-full" [class]="group.progressClass" [style.width.%]="group.progress"></div>
+                        </div>
+                        <p class="text-[10px] text-right text-slate-400">{{ group.memberCount }}</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (activeTab === 'report') {
+            <div class="space-y-8">
+              <div class="flex justify-between items-end">
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-800">Tổng hợp Kết quả Đồ án</h2>
+                  <p class="text-sm text-slate-500">Xem danh sách sinh viên theo hướng nghiên cứu và nhóm thực hiện.</p>
+                </div>
+                <button class="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-green-700 transition flex items-center gap-2">
+                  <lucide-icon [img]="icons.download" class="w-4 h-4"></lucide-icon>
+                  Xuất Báo Cáo
+                </button>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="bg-blue-50/50 p-4 border-b border-blue-100 flex items-center gap-3">
+                  <div class="p-2 bg-blue-100 text-blue-700 rounded-lg"><lucide-icon [img]="icons.building2" class="w-5 h-5"></lucide-icon></div>
+                  <h3 class="font-bold text-blue-900 text-lg uppercase tracking-tight">Khoa Khoa học & Kỹ thuật Máy tính</h3>
+                </div>
+                <div class="p-4 space-y-4">
+                  @for (section of reportSections; track section.key) {
+                    <div class="border border-slate-200 rounded-xl overflow-hidden transition-all duration-300">
+                      <div (click)="toggleReportItem(section.key)" class="bg-slate-50 p-5 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition group">
+                        <div class="flex-1">
+                          <div class="flex items-center gap-3 mb-2">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase" [class]="section.badgeClass">Hướng Nghiên Cứu</span>
+                            <h4 class="font-bold text-slate-800 text-base group-hover:text-blue-600 transition">{{ section.title }}</h4>
+                          </div>
+                          <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <lucide-icon [img]="icons.users" class="w-4 h-4 text-slate-400"></lucide-icon>
+                            GV Phụ Trách:
+                            @for (lecturer of section.lecturers; track lecturer) {
+                              <span class="font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-full">{{ lecturer }}</span>
+                            }
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                          <div class="text-right hidden sm:block">
+                            <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Số nhóm</p>
+                            <p class="font-black text-slate-700 text-lg">{{ section.groupCount }}</p>
+                          </div>
+                          <lucide-icon [img]="icons.chevronDown" class="w-6 h-6 text-slate-400 transition-transform" [style.transform]="reportItems[section.key] ? 'rotate(180deg)' : 'rotate(0deg)'"></lucide-icon>
+                        </div>
+                      </div>
+
+                      @if (reportItems[section.key]) {
+                        <div class="border-t border-slate-100">
+                          <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-100 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                              <tr>
+                                <th class="px-6 py-3 w-20">Nhóm</th>
+                                <th class="px-6 py-3 w-1/4">Tên Đề tài Cụ thể</th>
+                                <th class="px-6 py-3">MSSV</th>
+                                <th class="px-6 py-3">Họ và Tên</th>
+                                <th class="px-6 py-3">GVHD Trực tiếp</th>
+                                <th class="px-6 py-3 text-center">Trạng thái</th>
+                              </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                              @for (row of section.rows; track row.group) {
+                                <tr class="hover:bg-blue-50/30 transition group-row" [class]="row.rowClass">
+                                  <td class="px-6 py-4 align-top">
+                                    <span class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">{{ row.group }}</span>
+                                  </td>
+                                  <td class="px-6 py-4 align-top font-medium text-slate-700">{{ row.title }}</td>
+                                  <td class="px-6 py-4 align-top space-y-2">
+                                    @for (id of row.ids; track id) {
+                                      <div class="font-mono text-xs text-slate-500" [class.pt-2]="!$first">{{ id }}</div>
+                                    }
+                                  </td>
+                                  <td class="px-6 py-4 align-top space-y-2">
+                                    @for (student of row.students; track student) {
+                                      <div class="font-bold text-slate-700" [class.pt-2]="!$first">{{ student }}</div>
+                                    }
+                                  </td>
+                                  <td class="px-6 py-4 align-top">
+                                    <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">{{ row.advisor }}</span>
+                                  </td>
+                                  <td class="px-6 py-4 align-top text-center">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" [class]="row.statusClass">{{ row.status }}</span>
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </main>
+  </div>
+
+  @if (assignModalOpen) {
+    <div class="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+        <h3 class="font-bold text-lg mb-4">Phân công sinh viên</h3>
+        <p class="text-sm text-slate-600 mb-4">Sinh viên: <span class="font-semibold">{{ assignStudentName }}</span></p>
+        <div class="pt-4 flex justify-end gap-2">
+          <button (click)="assignModalOpen = false" class="px-4 py-2 rounded-lg border text-sm">Hủy</button>
+          <button (click)="confirmAssign()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

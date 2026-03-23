@@ -1,0 +1,23 @@
+<div [class]="getCardClass()">
+  <div
+    class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition transform group-hover:scale-110 duration-500"
+  >
+    <div [class]="getAccentIconClass(item.color)" class="flex items-center justify-center">
+      <lucide-icon [img]="icons[item.accentIcon]" class="w-24 h-24"></lucide-icon>
+    </div>
+  </div>
+  <div class="relative z-10 flex-1 flex flex-col">
+    <div [class]="getIconBadgeClass(item.color)">
+      <lucide-icon [img]="icons[item.icon]" class="w-6 h-6"></lucide-icon>
+    </div>
+    <h3 class="text-lg font-bold text-slate-800 mb-2">{{ item.name }}</h3>
+    <p class="text-sm text-slate-500 mb-6 flex-1">{{ item.description }}</p>
+    <button
+      (click)="select.emit(item)"
+      [disabled]="selectedSpecializationId && selectedSpecializationId !== item.id"
+      [class]="getButtonClass()"
+    >
+      <span>{{ getButtonLabel() }}</span>
+    </button>
+  </div>
+</div>
