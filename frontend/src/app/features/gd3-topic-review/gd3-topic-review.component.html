@@ -1,0 +1,48 @@
+<div class="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col overflow-hidden">
+  <app-header [role]="role" [userName]="userName" [userBadge]="userBadge" [notifications]="notifications" [showNotifications]="showNotifications" [showRoleSwitch]="false" (roleChange)="switchRole($event)" (toggleNotifications)="toggleNotifications()" (clearNotifications)="clearNotifications()" />
+  <div class="flex flex-1 overflow-hidden">
+    <app-project-timeline [timeline]="timeline" />
+    <main class="flex-1 overflow-y-auto p-4 md:p-8">
+  <div class="max-w-5xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h2 class="text-2xl font-bold">Duyệt đề tài</h2>
+        <p class="text-sm text-slate-500">Port từ `GD3/dangkydoan/duyetdetai.html`.</p>
+      </div>
+      <span class="px-3 py-1 rounded-lg text-xs font-bold" [class]="topicStatus === 'approved' ? 'bg-green-100 text-green-700' : topicStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'">
+        {{ topicStatus }}
+      </span>
+    </div>
+
+    <div class="space-y-4 text-sm text-slate-700">
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+        <div class="font-bold mb-1">Tên đề tài</div>
+        <div>{{ topicTitle }}</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+        <div class="font-bold mb-1">Mô tả</div>
+        <div>{{ topicDescription }}</div>
+      </div>
+    </div>
+
+    <div class="pt-6 flex justify-end gap-2">
+      <button (click)="openRejectModal()" class="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-bold">Từ chối</button>
+      <button (click)="approveTopic()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">Duyệt</button>
+    </div>
+  </div>
+
+  @if (rejectModalOpen) {
+    <div class="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-lg p-6">
+        <h3 class="font-bold text-lg mb-4">Lý do từ chối</h3>
+        <textarea [(ngModel)]="rejectReason" name="rejectReason" rows="4" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm"></textarea>
+        <div class="pt-4 flex justify-end gap-2">
+          <button (click)="closeRejectModal()" class="px-4 py-2 rounded-lg text-sm border">Hủy</button>
+          <button (click)="confirmReject()" class="px-4 py-2 rounded-lg text-sm bg-red-600 text-white">Gửi phản hồi</button>
+        </div>
+      </div>
+    </div>
+  }
+    </main>
+  </div>
+</div>
