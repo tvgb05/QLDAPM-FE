@@ -10,6 +10,13 @@ export interface ProjectTopicResponse {
   approvedBy: string | null;
 }
 
+export interface ProjectTopicCreateRequest {
+  projectTeamId: string;
+  teacherId: string;
+  title: string;
+  description: string | null;
+}
+
 export interface LecturerResponse {
   id: string;
   teacherCode: string | null;
@@ -28,6 +35,14 @@ export interface FacultyResponse {
   lastSyncedAt: string;
 }
 
+export interface ProjectTeamResponse {
+  id: string;
+  projectPeriodId: string;
+  projectTopicId: string;
+  teamName: string | null;
+  status: number;
+}
+
 export interface PagedResult<T> {
   results: T[] | null;
   currentPage: number;
@@ -40,13 +55,25 @@ export interface PagedResult<T> {
 
 export interface TopicTableItem {
   id: string;
+  teamId: string;
+  teamName: string;
   title: string;
-  code: string;
-  faculty: string;
-  facultyClass: string;
-  lecturers: string[];
+  lecturerName: string;
+  description: string;
 }
 
-export type ProjectTopicListApiResponse = ApiResponse<ProjectTopicResponse[]>;
+export interface TopicFormOption {
+  id: string;
+  label: string;
+}
+
+export interface TopicManagementContext {
+  topics: TopicTableItem[];
+  teams: TopicFormOption[];
+  lecturers: TopicFormOption[];
+}
+
+export type ProjectTopicPagedApiResponse = ApiResponse<PagedResult<ProjectTopicResponse>>;
 export type LecturerPagedApiResponse = ApiResponse<PagedResult<LecturerResponse>>;
-export type FacultyListApiResponse = ApiResponse<FacultyResponse[]>;
+export type ProjectTeamPagedApiResponse = ApiResponse<PagedResult<ProjectTeamResponse>>;
+export type ProjectTopicResponseApiResponse = ApiResponse<ProjectTopicResponse>;

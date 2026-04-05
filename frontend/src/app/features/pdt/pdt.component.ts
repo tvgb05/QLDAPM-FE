@@ -12,7 +12,7 @@ import { PdtTimeService } from './services/pdt-time.service';
 import { PdtTopicService } from './services/pdt-topic.service';
 import { PdtResultService } from './services/pdt-result.service';
 import { ProjectPeriodResponse, SemesterPublicResponse, TimeConfigForm } from './pdt-time.models';
-import { TopicTableItem } from './pdt-topic.models';
+import { TopicFormOption, TopicTableItem } from './pdt-topic.models';
 
 @Component({
   selector: 'app-pdt',
@@ -43,6 +43,7 @@ export class PdtComponent implements OnInit, AfterViewInit {
   loadingTimeConfig = false;
   savingTimeConfig = false;
   loadingTopics = false;
+  savingTopic = false;
   topicsLoaded = false;
   loadingReport = false;
   reportLoaded = false;
@@ -58,6 +59,14 @@ export class PdtComponent implements OnInit, AfterViewInit {
   private semesters: SemesterPublicResponse[] = [];
 
   topics: TopicTableItem[] = [];
+  topicTeams: TopicFormOption[] = [];
+  topicLecturers: TopicFormOption[] = [];
+  topicForm = {
+    projectTeamId: '',
+    teacherId: '',
+    title: '',
+    description: '',
+  };
 
   constructor(
     private readonly pdtTimeService: PdtTimeService,
@@ -265,6 +274,8 @@ export class PdtComponent implements OnInit, AfterViewInit {
       .subscribe({
         next: (result) => {
           this.topics = result.topics;
+          this.topicTeams = result.teams;
+          this.topicLecturers = result.lecturers;
           this.topicsLoaded = true;
         },
         error: (error: { message?: string; error?: { message?: string | null } }) => {
@@ -273,6 +284,55 @@ export class PdtComponent implements OnInit, AfterViewInit {
               error.error?.message ??
               error.message ??
               'Không thể tải danh sách đề tài.',
+          });
+        },
+      });
+  }
+
+  saveTopic(): void {
+    if (!this.topicForm.projectTeamId) {
+      this.notifications.unshift({
+        message:
+          'TODO: Swagger yêu cầu projectTeamId khi tạo ProjectTopic, nên không thể tạo đề tài nếu chưa chọn nhóm.',
+      });
+      return;
+    }
+
+    if (!this.topicForm.teacherId || !this.topicForm.title.trim()) {
+      this.notifications.unshift({
+        message: 'Vui lòng chọn giảng viên và nhập tên đề tài trước khi lưu.',
+      });
+      return;
+    }
+
+    this.savingTopic = true;
+    this.pdtTopicService
+      .createTopic({
+        projectTeamId: this.topicForm.projectTeamId,
+        teacherId: this.topicForm.teacherId,
+        title: this.topicForm.title.trim(),
+        description: this.topicForm.description.trim() || null,
+      })
+      .pipe(finalize(() => (this.savingTopic = false)))
+      .subscribe({
+        next: () => {
+          this.notifications.unshift({
+            message: 'Đã tạo đề tài mới theo đúng quan hệ team và giảng viên.',
+          });
+          this.topicForm = {
+            projectTeamId: '',
+            teacherId: '',
+            title: '',
+            description: '',
+          };
+          this.loadTopics();
+        },
+        error: (error: { message?: string; error?: { message?: string | null } }) => {
+          this.notifications.unshift({
+            message:
+              error.error?.message ??
+              error.message ??
+              'Không thể tạo đề tài theo dữ liệu hiện tại.',
           });
         },
       });
