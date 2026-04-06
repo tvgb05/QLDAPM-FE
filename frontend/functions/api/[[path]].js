@@ -1,4 +1,4 @@
-const API_ORIGIN = 'http://222.255.214.35';
+const API_ORIGIN = 'http://222.255.214.35.nip.io';
 
 export async function onRequest(context) {
   const { request, params } = context;
