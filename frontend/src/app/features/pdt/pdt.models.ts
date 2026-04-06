@@ -27,6 +27,7 @@ export interface AvailableGroup {
 }
 
 export interface ReportRow {
+  teamId?: string;
   group: string;
   title: string;
   ids: string[];
@@ -35,6 +36,9 @@ export interface ReportRow {
   status: string;
   statusClass: string;
   rowClass: string;
+  finalScore?: number | null;
+  grade?: string | null;
+  isPassed?: boolean | null;
 }
 
 export interface ReportSection {

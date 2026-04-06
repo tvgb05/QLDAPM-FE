@@ -5,6 +5,7 @@
     [userBadge]="userBadge"
     [notifications]="notifications"
     [showNotifications]="showNotifications"
+    [showRoleSwitch]="false"
     (roleChange)="switchRole($event)"
     (toggleNotifications)="toggleNotifications()"
     (clearNotifications)="clearNotifications()"
@@ -18,8 +19,8 @@
           <div>
             <h2 class="text-2xl font-bold text-slate-800 mb-1">{{ pageTitle }}</h2>
             <div class="flex items-center gap-2 text-slate-500 text-sm">
-              <span class="px-2 py-0.5 bg-slate-200 rounded text-xs font-bold text-slate-600">KTPM</span>
-              <span>Chuyên ngành Công nghệ phần mềm</span>
+              <span class="px-2 py-0.5 bg-slate-200 rounded text-xs font-bold text-slate-600">{{ currentMajorTag }}</span>
+              <span>Chuyên ngành {{ currentMajorName }}</span>
             </div>
           </div>
           <div class="relative w-full md:w-auto">
@@ -45,11 +46,17 @@
             </div>
 
             <div class="flex flex-col gap-3">
-              @for (item of filteredRegistrations; track item.lecturer) {
+              @if (loadingStudentData) {
+                <div class="bg-blue-50 rounded-xl border border-blue-100 p-4 text-sm font-medium text-blue-700">
+                  Đang tải dữ liệu giảng viên hướng dẫn...
+                </div>
+              }
+
+              @for (item of filteredRegistrations; track item.id) {
                 <app-gd2-registration-card [item]="item" (registerToggle)="toggleRegister($event)" />
               }
 
-              @if (!filteredRegistrations.length) {
+              @if (!loadingStudentData && !filteredRegistrations.length) {
                 <div class="bg-white rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-400">
                   Không tìm thấy giảng viên phù hợp.
                 </div>
@@ -101,7 +108,13 @@
 
             @if (activeTab === 'pending') {
               <div class="space-y-4">
-                @for (group of pendingGroups; track group.studentId) {
+                @if (loadingLecturerData) {
+                  <div class="bg-blue-50 rounded-xl border border-blue-100 p-4 text-sm font-medium text-blue-700">
+                    Đang tải danh sách đăng ký của sinh viên...
+                  </div>
+                }
+
+                @for (group of pendingGroups; track group.registrationId ?? group.studentId) {
                   <app-gd2-request-card
                     [group]="group"
                     (reject)="handleLecturerAction($event, 'reject')"
@@ -109,7 +122,7 @@
                   />
                 }
 
-                @if (!pendingGroups.length) {
+                @if (!loadingLecturerData && !pendingGroups.length) {
                   <div class="bg-white rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-400">
                     Không còn yêu cầu chờ duyệt.
                   </div>
@@ -122,7 +135,7 @@
                 @if (!acceptedCount) {
                   <div class="text-center py-10 text-slate-400 text-sm">Chưa có sinh viên nào được nhận.</div>
                 }
-                @for (group of acceptedGroups; track group.studentId) {
+                @for (group of acceptedGroups; track group.registrationId ?? group.studentId) {
                   <app-gd2-request-card [group]="group" [readonlyMode]="true" />
                 }
               </div>

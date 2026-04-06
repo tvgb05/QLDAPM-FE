@@ -1,5 +1,5 @@
 <div class="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col overflow-hidden">
-  <app-header [role]="role" [userName]="userName" [userBadge]="userBadge" [notifications]="notifications" [showNotifications]="showNotifications" (roleChange)="switchRole($event)" (toggleNotifications)="toggleNotifications()" (clearNotifications)="clearNotifications()" />
+  <app-header [role]="role" [userName]="userName" [userBadge]="userBadge" [notifications]="notifications" [showNotifications]="showNotifications" [showRoleSwitch]="false" (roleChange)="switchRole($event)" (toggleNotifications)="toggleNotifications()" (clearNotifications)="clearNotifications()" />
   <div class="flex flex-1 overflow-hidden">
     <app-project-timeline [timeline]="timeline" />
     <main class="flex-1 overflow-y-auto p-4 md:p-8">
@@ -7,8 +7,8 @@
     <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
       <div class="flex justify-between items-center mb-6">
         <div>
-          <h2 class="text-2xl font-bold">Báo cáo tiến độ</h2>
-          <p class="text-sm text-slate-500">Port từ `GD3/Baocaotiendo1va2vaNop/index.html`.</p>
+          <h2 class="text-2xl font-bold">{{ pageTitle }}</h2>
+          <p class="text-sm text-slate-500">{{ pageSubtitle }}</p>
         </div>
         <span class="px-3 py-1 rounded-lg text-xs font-bold" [class]="report.status === 'approved' ? 'bg-green-100 text-green-700' : report.status === 'rejected' ? 'bg-red-100 text-red-700' : report.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'">
           {{ report.status }}
@@ -20,7 +20,7 @@
         <input [(ngModel)]="report.fileName" name="reportFileName" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm" placeholder="Tên file đính kèm" />
         <div class="flex justify-end gap-2">
           <button (click)="openDetailModal()" class="px-4 py-2 rounded-lg border text-sm">Xem chi tiết</button>
-          <button (click)="submitReport()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold">Gửi báo cáo</button>
+          <button (click)="submitReport()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold">{{ submitButtonLabel }}</button>
         </div>
       </div>
     </div>

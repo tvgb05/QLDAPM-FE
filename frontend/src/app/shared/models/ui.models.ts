@@ -1,6 +1,10 @@
-export type AppRole = 'student' | 'lecturer';
+export type AppRole = 'student' | 'lecturer' | 'pdt';
 
-export interface TimelineSubStep {
+export interface NotificationItem {
+  message: string;
+}
+
+export interface TimelineChild {
   title: string;
   muted?: boolean;
   emphasis?: boolean;
@@ -13,15 +17,11 @@ export interface TimelineStep {
   subtitle: string;
   badge?: string;
   badgeClass?: string;
-  textClass: string;
+  textClass?: string;
   subtitleClass?: string;
   stepNumberClass?: string;
-  active: boolean;
+  active?: boolean;
   completed?: boolean;
   time?: string;
-  children?: TimelineSubStep[];
-}
-
-export interface NotificationItem {
-  message: string;
+  children?: TimelineChild[];
 }

@@ -1,9 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AppHeaderComponent } from '../../shared/components/app-header/app-header.component';
 import { ProjectTimelineComponent } from '../../shared/components/project-timeline/project-timeline.component';
 import { AppRole, NotificationItem, TimelineStep } from '../../shared/models/ui.models';
+import { AuthService } from '../../shared/services/auth.service';
+import { Gd3Service } from '../gd3/services/gd3.service';
 
 @Component({
   selector: 'app-gd3-topic-review',
@@ -11,25 +15,49 @@ import { AppRole, NotificationItem, TimelineStep } from '../../shared/models/ui.
   imports: [CommonModule, FormsModule, AppHeaderComponent, ProjectTimelineComponent],
   templateUrl: './gd3-topic-review.component.html',
 })
-export class Gd3TopicReviewComponent {
-  role: AppRole = 'lecturer';
-  userName = 'TS. Giảng viên A';
-  userBadge = 'GV';
+export class Gd3TopicReviewComponent implements OnInit {
+  role: AppRole = 'student';
+  private currentUserName = 'Nguyễn Văn A';
+  private topicId: string | null = null;
+  private lecturerId: string | null = null;
   showNotifications = false;
   notifications: NotificationItem[] = [];
-  readonly timeline: TimelineStep[] = [
-    { step: '1', title: 'Giai đoạn 1', subtitle: 'Chọn Hướng Chuyên ngành', badge: 'Hoàn thành', badgeClass: 'bg-green-50 text-green-700 border border-green-100', textClass: 'text-slate-600', active: false, time: 'Đã kết thúc' },
-    { step: '2', title: 'Giai đoạn 2', subtitle: 'Đăng ký GVHD', badge: 'Hoàn thành', badgeClass: 'bg-green-50 text-green-700 border border-green-100', textClass: 'text-slate-600', active: false, time: 'Đã kết thúc' },
-    { step: '3', title: 'Giai đoạn 3', subtitle: 'Duyệt đề tài', badge: 'Đang diễn ra', badgeClass: 'bg-blue-50 text-blue-700 border border-blue-100', textClass: 'text-blue-700', active: true, time: 'Phân công & đề tài' },
-  ];
+  timeline: TimelineStep[] = [];
+  loadingData = false;
+  topicTitle = 'Xây dựng hệ thống Microservices cho sàn TMĐT';
+  topicDescription = 'Nghiên cứu kiến trúc Microservices, Docker, K8s...';
   topicStatus: 'pending' | 'approved' | 'rejected' = 'pending';
   rejectModalOpen = false;
   rejectReason = '';
 
-  switchRole(role: AppRole): void {
-    this.role = role;
-    this.userName = role === 'lecturer' ? 'TS. Giảng viên A' : 'Nguyễn Văn A';
-    this.userBadge = role === 'lecturer' ? 'GV' : 'SV';
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly authService: AuthService,
+    private readonly gd3Service: Gd3Service
+  ) {}
+
+  ngOnInit(): void {
+    this.role = this.authService.getCurrentRole();
+
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      this.currentUserName =
+        currentUser.fullName?.trim() || currentUser.userName?.trim() || this.currentUserName;
+    }
+
+    this.loadPageData();
+  }
+
+  get userName(): string {
+    return this.currentUserName;
+  }
+
+  get userBadge(): string {
+    return this.role === 'lecturer' ? 'GV' : 'SV';
+  }
+
+  switchRole(_role: AppRole): void {
+    // Role is driven by login response for now.
   }
 
   toggleNotifications(): void {
@@ -42,7 +70,14 @@ export class Gd3TopicReviewComponent {
   }
 
   approveTopic(): void {
-    this.topicStatus = 'approved';
+    if (!this.topicId) {
+      this.addNotification('TODO: Chưa có topicId để gọi PUT /api/ProjectTopic/{id}.');
+      return;
+    }
+
+    this.addNotification(
+      'TODO: Swagger chưa nêu rõ numeric status cho approve topic, nên mình chưa gửi PUT để tránh sai dữ liệu.'
+    );
   }
 
   openRejectModal(): void {
@@ -58,7 +93,77 @@ export class Gd3TopicReviewComponent {
     if (!this.rejectReason) {
       return;
     }
-    this.topicStatus = 'rejected';
-    this.rejectModalOpen = false;
+
+    if (!this.topicId) {
+      this.addNotification('TODO: Chưa có topicId để gọi PUT /api/ProjectTopic/{id}.');
+      return;
+    }
+
+    this.addNotification(
+      'TODO: Swagger chưa nêu rõ numeric status cho reject topic, nên mình chưa gửi PUT để tránh sai dữ liệu.'
+    );
+  }
+
+  private loadPageData(): void {
+    this.loadingData = true;
+    this.topicId = this.route.snapshot.queryParamMap.get('topicId');
+
+    this.gd3Service
+      .loadTimeline()
+      .pipe(finalize(() => (this.loadingData = false)))
+      .subscribe({
+        next: (timeline) => {
+          this.timeline = timeline;
+        },
+        error: (error: { message?: string; error?: { message?: string | null } }) => {
+          this.addNotification(
+            error.error?.message ?? error.message ?? 'Không thể tải timeline Stage 3.'
+          );
+        },
+      });
+
+    this.gd3Service.loadLecturerContext(this.authService.getCurrentUser()).subscribe({
+      next: (context) => {
+        this.lecturerId = context.lecturerId;
+      },
+    });
+
+    if (!this.topicId) {
+      this.addNotification('TODO: Chưa có topicId trên route để fetch GET /api/ProjectTopic/{id}.');
+      return;
+    }
+
+    this.gd3Service.getTopic(this.topicId).subscribe({
+      next: (response) => {
+        const topic = response.data;
+        if (!topic) {
+          return;
+        }
+
+        this.topicTitle = topic.title?.trim() || this.topicTitle;
+        this.topicDescription = topic.description?.trim() || this.topicDescription;
+
+        if (topic.status != null) {
+          this.addNotification(
+            'TODO: Swagger chưa nêu rõ enum status của ProjectTopic, nên UI không map số status sang nhãn cụ thể.'
+          );
+        }
+
+        if (!this.lecturerId) {
+          this.addNotification(
+            'TODO: Chưa xác định được lecturerId hiện tại để truyền approvedLecturerId khi backend chốt enum status.'
+          );
+        }
+      },
+      error: (error: { message?: string; error?: { message?: string | null } }) => {
+        this.addNotification(
+          error.error?.message ?? error.message ?? 'Không thể tải chi tiết đề tài.'
+        );
+      },
+    });
+  }
+
+  private addNotification(message: string): void {
+    this.notifications.unshift({ message });
   }
 }

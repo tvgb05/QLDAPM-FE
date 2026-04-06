@@ -1,24 +1,32 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, AfterViewInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { finalize } from 'rxjs';
 import { AppHeaderComponent } from '../../shared/components/app-header/app-header.component';
 import { APP_ICONS } from '../../shared/icons/app-icons';
 import { AppRole, NotificationItem } from '../../shared/models/ui.models';
 import { PdtAdminSidebarComponent } from './components/pdt-admin-sidebar.component';
-import { PdtTab, ReportKey, ReportSection, TopicItem, UnassignedStudent, AvailableGroup } from './pdt.models';
+import { PdtTab, ReportKey, ReportSection, UnassignedStudent, AvailableGroup } from './pdt.models';
+import { PdtTimeService } from './services/pdt-time.service';
+import { PdtTopicService } from './services/pdt-topic.service';
+import { PdtResultService } from './services/pdt-result.service';
+import { ProjectPeriodResponse, SemesterPublicResponse, TimeConfigForm } from './pdt-time.models';
+import { TopicFormOption, TopicTableItem } from './pdt-topic.models';
 
 @Component({
   selector: 'app-pdt',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     LucideAngularModule,
     AppHeaderComponent,
     PdtAdminSidebarComponent,
   ],
   templateUrl: './pdt.component.html',
 })
-export class PdtComponent {
+export class PdtComponent implements OnInit, AfterViewInit {
   readonly icons = APP_ICONS;
   role: AppRole = 'student';
   userName = 'Nguyễn Văn A';
@@ -32,23 +40,52 @@ export class PdtComponent {
     topic01: true,
     topic02: false,
   };
+  loadingTimeConfig = false;
+  savingTimeConfig = false;
+  loadingTopics = false;
+  savingTopic = false;
+  topicsLoaded = false;
+  loadingReport = false;
+  reportLoaded = false;
+  private timeConfigLoaded = false;
+  timeConfig: TimeConfigForm = {
+    stage1StartDate: '',
+    stage1EndDate: '',
+    stage2StartDate: '',
+    stage2EndDate: '',
+    stage3PublishDate: '',
+  };
+  private projectPeriods: ProjectPeriodResponse[] = [];
+  private semesters: SemesterPublicResponse[] = [];
 
-  readonly topics: TopicItem[] = [
-    {
-      title: 'Chuyên ngành gì đó',
-      code: 'DT-001',
-      faculty: 'K.H.M.T',
-      facultyClass: 'bg-blue-100 text-blue-700',
-      lecturers: ['TS. Nguyễn Văn A', 'ThS. Lê Văn C'],
-    },
-    {
-      title: 'Chuyên ngành gì đó nữa',
-      code: 'DT-002',
-      faculty: 'Điện - Điện tử',
-      facultyClass: 'bg-green-100 text-green-700',
-      lecturers: ['TS. Trần Thị B'],
-    },
-  ];
+  topics: TopicTableItem[] = [];
+  topicTeams: TopicFormOption[] = [];
+  topicLecturers: TopicFormOption[] = [];
+  topicForm = {
+    projectTeamId: '',
+    teacherId: '',
+    title: '',
+    description: '',
+  };
+
+  constructor(
+    private readonly pdtTimeService: PdtTimeService,
+    private readonly pdtTopicService: PdtTopicService,
+    private readonly pdtResultService: PdtResultService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadTimeConfig();
+  }
+
+  ngAfterViewInit(): void {
+    window.setTimeout(() => {
+      if (this.activeTab === 'time' && !this.timeConfigLoaded && !this.loadingTimeConfig) {
+        this.loadTimeConfig();
+      }
+    }, 250);
+  }
 
   readonly unassignedStudents: UnassignedStudent[] = [
     { name: 'Phạm Văn D', studentId: '2011005', faculty: 'K.H.M.T' },
@@ -144,6 +181,18 @@ export class PdtComponent {
 
   switchAdminTab(tabName: PdtTab): void {
     this.activeTab = tabName;
+
+    if (tabName === 'time') {
+      this.loadTimeConfig();
+    }
+
+    if (tabName === 'topics' && !this.topicsLoaded) {
+      this.loadTopics();
+    }
+
+    if (tabName === 'report' && !this.reportLoaded) {
+      this.loadReportResults();
+    }
   }
 
   openAssignModal(studentName: string): void {
@@ -162,7 +211,162 @@ export class PdtComponent {
     this.reportItems[id] = !this.reportItems[id];
   }
 
+  updateTimeField(field: keyof TimeConfigForm, event: Event): void {
+    const target = event.target as HTMLInputElement | null;
+    this.timeConfig = {
+      ...this.timeConfig,
+      [field]: target?.value ?? '',
+    };
+  }
+
   saveConfig(): void {
-    this.notifications.unshift({ message: 'Đã lưu cấu hình thời gian đăng ký.' });
+    this.savingTimeConfig = true;
+    this.pdtTimeService
+      .saveTimeConfig(this.timeConfig, this.projectPeriods, this.semesters)
+      .pipe(finalize(() => (this.savingTimeConfig = false)))
+      .subscribe({
+        next: () => {
+          this.notifications.unshift({ message: 'Đã lưu cấu hình thời gian đăng ký.' });
+          this.loadTimeConfig();
+        },
+        error: (error: { message?: string; error?: { message?: string | null } }) => {
+          this.notifications.unshift({
+            message:
+              error.error?.message ??
+              error.message ??
+              'Không thể lưu cấu hình thời gian đăng ký.',
+          });
+        },
+      });
+  }
+
+  private loadTimeConfig(): void {
+    this.loadingTimeConfig = true;
+    this.pdtTimeService
+      .loadTimeConfig()
+      .pipe(finalize(() => (this.loadingTimeConfig = false)))
+      .subscribe({
+        next: (result) => {
+          this.timeConfig = result.form;
+          this.projectPeriods = result.periods;
+          this.semesters = result.semesters;
+          this.timeConfigLoaded = true;
+          this.cdr.detectChanges();
+        },
+        error: (error: { message?: string; error?: { message?: string | null } }) => {
+          this.timeConfigLoaded = false;
+          this.notifications.unshift({
+            message:
+              error.error?.message ??
+              error.message ??
+              'Không thể tải cấu hình thời gian đăng ký.',
+          });
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private loadTopics(): void {
+    this.loadingTopics = true;
+    this.pdtTopicService
+      .loadTopics()
+      .pipe(finalize(() => (this.loadingTopics = false)))
+      .subscribe({
+        next: (result) => {
+          this.topics = result.topics;
+          this.topicTeams = result.teams;
+          this.topicLecturers = result.lecturers;
+          this.topicsLoaded = true;
+        },
+        error: (error: { message?: string; error?: { message?: string | null } }) => {
+          this.notifications.unshift({
+            message:
+              error.error?.message ??
+              error.message ??
+              'Không thể tải danh sách đề tài.',
+          });
+        },
+      });
+  }
+
+  saveTopic(): void {
+    if (!this.topicForm.projectTeamId) {
+      this.notifications.unshift({
+        message:
+          'TODO: Swagger yêu cầu projectTeamId khi tạo ProjectTopic, nên không thể tạo đề tài nếu chưa chọn nhóm.',
+      });
+      return;
+    }
+
+    if (!this.topicForm.teacherId || !this.topicForm.title.trim()) {
+      this.notifications.unshift({
+        message: 'Vui lòng chọn giảng viên và nhập tên đề tài trước khi lưu.',
+      });
+      return;
+    }
+
+    this.savingTopic = true;
+    this.pdtTopicService
+      .createTopic({
+        projectTeamId: this.topicForm.projectTeamId,
+        teacherId: this.topicForm.teacherId,
+        title: this.topicForm.title.trim(),
+        description: this.topicForm.description.trim() || null,
+      })
+      .pipe(finalize(() => (this.savingTopic = false)))
+      .subscribe({
+        next: () => {
+          this.notifications.unshift({
+            message: 'Đã tạo đề tài mới theo đúng quan hệ team và giảng viên.',
+          });
+          this.topicForm = {
+            projectTeamId: '',
+            teacherId: '',
+            title: '',
+            description: '',
+          };
+          this.loadTopics();
+        },
+        error: (error: { message?: string; error?: { message?: string | null } }) => {
+          this.notifications.unshift({
+            message:
+              error.error?.message ??
+              error.message ??
+              'Không thể tạo đề tài theo dữ liệu hiện tại.',
+          });
+        },
+      });
+  }
+
+  private loadReportResults(): void {
+    this.loadingReport = true;
+    this.pdtResultService
+      .loadReportSections(this.reportSections)
+      .pipe(finalize(() => (this.loadingReport = false)))
+      .subscribe({
+        next: (sections) => {
+          this.reportSections.splice(0, this.reportSections.length, ...sections);
+          this.reportLoaded = true;
+
+          const hasTeamIds = sections.some((section) =>
+            section.rows.some((row) => !!row.teamId)
+          );
+
+          if (!hasTeamIds) {
+            this.notifications.unshift({
+              message:
+                'TODO: Tab tổng hợp hiện chưa có teamId thật trên từng dòng UI, nên chỉ có thể giữ dữ liệu mock cho đến khi map được ProjectTeam.',
+            });
+          }
+        },
+        error: (error: { message?: string; error?: { message?: string | null } }) => {
+          this.notifications.unshift({
+            message:
+              error.error?.message ??
+              error.message ??
+              'Không thể tải kết quả Training Office Result.',
+          });
+        },
+      });
   }
 }

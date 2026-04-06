@@ -1,5 +1,5 @@
 <div class="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col overflow-hidden">
-  <app-header [role]="role" [userName]="userName" [userBadge]="userBadge" [notifications]="notifications" [showNotifications]="showNotifications" (roleChange)="switchRole($event)" (toggleNotifications)="toggleNotifications()" (clearNotifications)="clearNotifications()" />
+  <app-header [role]="role" [userName]="userName" [userBadge]="userBadge" [notifications]="notifications" [showNotifications]="showNotifications" [showRoleSwitch]="false" (roleChange)="switchRole($event)" (toggleNotifications)="toggleNotifications()" (clearNotifications)="clearNotifications()" />
   <div class="flex flex-1 overflow-hidden">
     <app-project-timeline [timeline]="timeline" />
     <main class="flex-1 overflow-y-auto p-4 md:p-8">
@@ -17,11 +17,11 @@
     <div class="space-y-4 text-sm text-slate-700">
       <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
         <div class="font-bold mb-1">Tên đề tài</div>
-        <div>Xây dựng hệ thống Microservices cho sàn TMĐT</div>
+        <div>{{ topicTitle }}</div>
       </div>
       <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
         <div class="font-bold mb-1">Mô tả</div>
-        <div>Nghiên cứu kiến trúc Microservices, Docker, K8s...</div>
+        <div>{{ topicDescription }}</div>
       </div>
     </div>
 

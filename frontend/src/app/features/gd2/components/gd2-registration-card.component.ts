@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+
 import { APP_ICONS } from '../../../shared/icons/app-icons';
-import { LecturerCardTone, RegistrationItem } from '../gd2.models';
+import { RegistrationItem } from '../gd2.models';
 
 @Component({
   selector: 'app-gd2-registration-card',
@@ -17,56 +18,30 @@ export class Gd2RegistrationCardComponent {
   readonly icons = APP_ICONS;
 
   get cardClass(): string {
-    if (this.item.full) {
-      return 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm opacity-70 flex flex-col md:flex-row items-center justify-between gap-4';
-    }
-
-    if (this.item.tone === 'blue') {
-      return 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition flex flex-col md:flex-row items-center justify-between gap-4 group';
-    }
-
-    return 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 transition flex flex-col md:flex-row items-center justify-between gap-4 group';
+    return 'bg-white rounded-xl border border-slate-200 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm';
   }
 
-  initialsClass(tone: LecturerCardTone): string {
-    switch (tone) {
-      case 'blue':
-        return 'h-12 w-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold text-lg border border-blue-200';
-      case 'purple':
-        return 'h-12 w-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center font-bold text-lg border border-purple-100';
-      default:
-        return 'h-12 w-12 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center font-bold text-lg border border-slate-200';
-    }
+  initialsClass(tone: RegistrationItem['tone']): string {
+    return {
+      blue: 'w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold',
+      purple: 'w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold',
+      slate: 'w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold',
+    }[tone];
   }
 
-  tagClass(tone: LecturerCardTone): string {
-    switch (tone) {
-      case 'blue':
-        return 'bg-blue-50 text-blue-700 border border-blue-100 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded';
-      case 'purple':
-        return 'bg-purple-50 text-purple-700 border border-purple-100 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded';
-      default:
-        return 'bg-slate-100 text-slate-600 border border-slate-200 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded';
-    }
-  }
-
-  quotaValueClass(): string {
-    if (this.item.progress >= 100) {
-      return 'text-red-600';
-    }
-    if (this.item.progress >= 60) {
-      return 'text-yellow-600';
-    }
-    return 'text-blue-600';
+  tagClass(tone: RegistrationItem['tone']): string {
+    return {
+      blue: 'px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700',
+      purple: 'px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700',
+      slate: 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700',
+    }[tone];
   }
 
   lecturerNameClass(): string {
-    if (this.item.tone === 'blue') {
-      return 'group-hover:text-blue-600';
-    }
-    if (this.item.tone === 'purple') {
-      return 'group-hover:text-purple-600';
-    }
-    return '';
+    return this.item.registered ? 'text-blue-700' : '';
+  }
+
+  quotaValueClass(): string {
+    return this.item.full ? 'text-red-600' : 'text-slate-600';
   }
 }

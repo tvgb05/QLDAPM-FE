@@ -23,11 +23,21 @@
                   <h2 class="text-2xl font-bold text-slate-800">Cấu hình thời gian đăng ký</h2>
                   <p class="text-sm text-slate-500">Thiết lập thời gian mở/đóng cho 3 giai đoạn đăng ký.</p>
                 </div>
-                <button (click)="saveConfig()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+                <button
+                  (click)="saveConfig()"
+                  [disabled]="loadingTimeConfig || savingTimeConfig"
+                  class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
                   <lucide-icon [img]="icons.save" class="w-4 h-4"></lucide-icon>
-                  Lưu cấu hình
+                  {{ savingTimeConfig ? 'Đang lưu...' : 'Lưu cấu hình' }}
                 </button>
               </div>
+
+              @if (loadingTimeConfig) {
+                <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+                  Đang tải cấu hình thời gian...
+                </div>
+              }
 
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
@@ -36,11 +46,23 @@
                   <div class="space-y-3">
                     <div>
                       <label class="block text-xs font-bold text-slate-500 mb-1">Ngày bắt đầu</label>
-                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value="2026-01-10" />
+                      <input
+                        type="date"
+                        [value]="timeConfig.stage1StartDate"
+                        (input)="updateTimeField('stage1StartDate', $event)"
+                        [disabled]="savingTimeConfig"
+                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-50"
+                      />
                     </div>
                     <div>
                       <label class="block text-xs font-bold text-slate-500 mb-1">Ngày kết thúc</label>
-                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value="2026-01-20" />
+                      <input
+                        type="date"
+                        [value]="timeConfig.stage1EndDate"
+                        (input)="updateTimeField('stage1EndDate', $event)"
+                        [disabled]="savingTimeConfig"
+                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-50"
+                      />
                     </div>
                   </div>
                 </div>
@@ -50,11 +72,23 @@
                   <div class="space-y-3">
                     <div>
                       <label class="block text-xs font-bold text-slate-500 mb-1">Ngày bắt đầu</label>
-                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value="2026-01-22" />
+                      <input
+                        type="date"
+                        [value]="timeConfig.stage2StartDate"
+                        (input)="updateTimeField('stage2StartDate', $event)"
+                        [disabled]="savingTimeConfig"
+                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none disabled:bg-slate-50"
+                      />
                     </div>
                     <div>
                       <label class="block text-xs font-bold text-slate-500 mb-1">Ngày kết thúc</label>
-                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value="2026-01-25" />
+                      <input
+                        type="date"
+                        [value]="timeConfig.stage2EndDate"
+                        (input)="updateTimeField('stage2EndDate', $event)"
+                        [disabled]="savingTimeConfig"
+                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none disabled:bg-slate-50"
+                      />
                     </div>
                   </div>
                 </div>
@@ -64,7 +98,13 @@
                   <div class="space-y-3">
                     <div>
                       <label class="block text-xs font-bold text-slate-500 mb-1">Ngày công bố</label>
-                      <input type="date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none" value="2026-01-30" />
+                      <input
+                        type="date"
+                        [value]="timeConfig.stage3PublishDate"
+                        (input)="updateTimeField('stage3PublishDate', $event)"
+                        [disabled]="savingTimeConfig"
+                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none disabled:bg-slate-50"
+                      />
                     </div>
                     <div class="pt-4">
                       <div class="flex items-center gap-2 p-2 bg-green-50 text-green-700 rounded-lg text-xs">
@@ -83,49 +123,136 @@
               <div class="flex justify-between items-end">
                 <div>
                   <h2 class="text-2xl font-bold text-slate-800">Quản lý Đề tài & Phân công GV</h2>
-                  <p class="text-sm text-slate-500">Gán danh sách giảng viên chịu trách nhiệm cho từng đề tài.</p>
+                  <p class="text-sm text-slate-500">Mỗi đề tài được gắn với một nhóm cụ thể và một giảng viên phụ trách.</p>
                 </div>
-                <button class="bg-orange-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow hover:bg-orange-700 flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="saveTopic()"
+                  class="bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-orange-700 transition flex items-center gap-2"
+                >
                   <lucide-icon [img]="icons.plus" class="w-4 h-4"></lucide-icon>
-                  Thêm đề tài mới
+                  {{ savingTopic ? 'Đang lưu...' : 'Thêm đề tài mới' }}
                 </button>
               </div>
+
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                    <lucide-icon [img]="icons.plus" class="w-5 h-5"></lucide-icon>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-slate-800">Tạo đề tài mới</h3>
+                    <p class="text-sm text-slate-500">ProjectTopic bắt buộc phải gắn với một ProjectTeam cụ thể.</p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Nhóm thực hiện</label>
+                    <select
+                      [(ngModel)]="topicForm.projectTeamId"
+                      class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white"
+                    >
+                      <option value="">Chọn nhóm</option>
+                      @for (team of topicTeams; track team.id) {
+                        <option [value]="team.id">{{ team.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Giảng viên phụ trách</label>
+                    <select
+                      [(ngModel)]="topicForm.teacherId"
+                      class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white"
+                    >
+                      <option value="">Chọn giảng viên</option>
+                      @for (lecturer of topicLecturers; track lecturer.id) {
+                        <option [value]="lecturer.id">{{ lecturer.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Tên đề tài</label>
+                    <input
+                      [(ngModel)]="topicForm.title"
+                      type="text"
+                      class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                      placeholder="Nhập tên đề tài"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Mô tả</label>
+                    <input
+                      [(ngModel)]="topicForm.description"
+                      type="text"
+                      class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                      placeholder="Nhập mô tả đề tài"
+                    />
+                  </div>
+                </div>
+
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    (click)="saveTopic()"
+                    class="bg-orange-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow flex items-center gap-2 hover:bg-orange-700 transition"
+                  >
+                    <lucide-icon [img]="icons.save" class="w-4 h-4"></lucide-icon>
+                    {{ savingTopic ? 'Đang lưu...' : 'Tạo đề tài' }}
+                  </button>
+                </div>
+              </div>
+
+              @if (loadingTopics) {
+                <div class="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700">
+                  Đang tải danh sách đề tài...
+                </div>
+              }
 
               <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <table class="w-full text-sm text-left">
                   <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
                     <tr>
-                      <th class="px-6 py-4 w-1/3">Tên Đề tài</th>
-                      <th class="px-6 py-4">Khoa</th>
+                      <th class="px-6 py-4">Tên nhóm</th>
+                      <th class="px-6 py-4 w-1/3">Tên đề tài</th>
                       <th class="px-6 py-4">Giảng viên phụ trách</th>
                       <th class="px-6 py-4 text-center">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100">
-                    @for (topic of topics; track topic.code) {
+                    @if (!loadingTopics && !topics.length) {
+                      <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-sm text-slate-500">
+                          Chưa có dữ liệu đề tài từ backend.
+                        </td>
+                      </tr>
+                    }
+
+                    @for (topic of topics; track topic.id) {
                       <tr class="hover:bg-slate-50 transition group">
                         <td class="px-6 py-4">
-                          <p class="font-bold text-slate-700">{{ topic.title }}</p>
-                          <p class="text-xs text-slate-400 mt-1">Mã: {{ topic.code }}</p>
+                          <p class="font-bold text-slate-700">{{ topic.teamName }}</p>
+                          <p class="text-xs text-slate-400 mt-1 font-mono">Team ID: {{ topic.teamId }}</p>
                         </td>
                         <td class="px-6 py-4 text-slate-600">
-                          <span class="px-2 py-1 rounded text-xs font-bold" [class]="topic.facultyClass">{{ topic.faculty }}</span>
+                          <p class="font-bold text-slate-700">{{ topic.title }}</p>
+                          <p class="text-xs text-slate-400 mt-1">{{ topic.description }}</p>
                         </td>
                         <td class="px-6 py-4">
-                          <div class="flex flex-wrap gap-2">
-                            @for (lecturer of topic.lecturers; track lecturer) {
-                              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
-                                {{ lecturer }}
-                                <lucide-icon [img]="icons.x" class="w-3 h-3 cursor-pointer hover:text-red-500"></lucide-icon>
-                              </span>
-                            }
-                            <button class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-orange-100 hover:text-orange-600 transition" title="Thêm GV">
-                              <lucide-icon [img]="icons.plus" class="w-3 h-3"></lucide-icon>
-                            </button>
-                          </div>
+                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
+                            {{ topic.lecturerName }}
+                          </span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                          <button class="text-slate-400 hover:text-blue-600">
+                          <button
+                            type="button"
+                            disabled
+                            class="text-slate-300 cursor-not-allowed"
+                            title="Phần chỉnh sửa chi tiết sẽ gắn tiếp sau khi chốt endpoint cập nhật."
+                          >
                             <lucide-icon [img]="icons.pencilLine" class="w-4 h-4"></lucide-icon>
                           </button>
                         </td>
@@ -222,6 +349,12 @@
                 </button>
               </div>
 
+              @if (loadingReport) {
+                <div class="rounded-2xl border border-green-100 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+                  Đang tải kết quả từ Training Office Result...
+                </div>
+              }
+
               <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="bg-blue-50/50 p-4 border-b border-blue-100 flex items-center gap-3">
                   <div class="p-2 bg-blue-100 text-blue-700 rounded-lg"><lucide-icon [img]="icons.building2" class="w-5 h-5"></lucide-icon></div>
@@ -288,6 +421,16 @@
                                   </td>
                                   <td class="px-6 py-4 align-top text-center">
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" [class]="row.statusClass">{{ row.status }}</span>
+                                    @if (row.finalScore != null || row.grade) {
+                                      <div class="mt-2 text-[10px] text-slate-500 space-y-1">
+                                        @if (row.finalScore != null) {
+                                          <div>Điểm: {{ row.finalScore }}</div>
+                                        }
+                                        @if (row.grade) {
+                                          <div>Xếp loại: {{ row.grade }}</div>
+                                        }
+                                      </div>
+                                    }
                                   </td>
                                 </tr>
                               }

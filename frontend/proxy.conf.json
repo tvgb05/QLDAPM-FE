@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "http://222.255.214.35",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

@@ -1,49 +1,47 @@
 import { Routes } from '@angular/router';
-import { Gd1Component } from './features/gd1/gd1.component';
-import { Gd2Component } from './features/gd2/gd2.component';
-import { Gd3ProgressReportComponent } from './features/gd3-progress-report/gd3-progress-report.component';
-import { Gd3TopicRegistrationComponent } from './features/gd3-topic-registration/gd3-topic-registration.component';
-import { Gd3TopicReviewComponent } from './features/gd3-topic-review/gd3-topic-review.component';
-import { LoginComponent } from './features/login/login.component';
-import { PdtComponent } from './features/pdt/pdt.component';
-import { TempComponent } from './features/temp/temp.component';
 
-export const appRoutes: Routes = [
-  {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'login',
-  },
+export const routes: Routes = [
   {
     path: 'login',
-    component: LoginComponent,
+    loadComponent: () =>
+      import('./features/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'gd1',
-    component: Gd1Component,
+    loadComponent: () =>
+      import('./features/gd1/gd1.component').then((m) => m.Gd1Component),
   },
   {
     path: 'gd2',
-    component: Gd2Component,
+    loadComponent: () =>
+      import('./features/gd2/gd2.component').then((m) => m.Gd2Component),
   },
   {
-    path: 'gd3/topic-registration',
-    component: Gd3TopicRegistrationComponent,
+    path: 'topic-registration',
+    loadComponent: () =>
+      import('./features/gd3-topic-registration/gd3-topic-registration.component').then(
+        (m) => m.Gd3TopicRegistrationComponent
+      ),
   },
   {
-    path: 'gd3/topic-review',
-    component: Gd3TopicReviewComponent,
+    path: 'topic-review',
+    loadComponent: () =>
+      import('./features/gd3-topic-review/gd3-topic-review.component').then(
+        (m) => m.Gd3TopicReviewComponent
+      ),
   },
   {
-    path: 'gd3/progress-report',
-    component: Gd3ProgressReportComponent,
+    path: 'progress-report',
+    loadComponent: () =>
+      import('./features/gd3-progress-report/gd3-progress-report.component').then(
+        (m) => m.Gd3ProgressReportComponent
+      ),
   },
   {
     path: 'pdt',
-    component: PdtComponent,
+    loadComponent: () =>
+      import('./features/pdt/pdt.component').then((m) => m.PdtComponent),
   },
-  {
-    path: 'temp',
-    component: TempComponent,
-  },
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '**', redirectTo: 'login' },
 ];
