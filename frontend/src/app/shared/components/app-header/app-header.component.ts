@@ -45,7 +45,7 @@ import { AppRole, NotificationItem } from '../../models/ui.models';
                   </button>
                 </div>
                 <div class="max-h-80 overflow-y-auto">
-                  @if (!notifications?.length) {
+                  @if (!notifications.length) {
                     <div class="px-4 py-6 text-sm text-slate-500 text-center">Chưa có thông báo.</div>
                   }
                   @for (item of notifications; track item.message) {

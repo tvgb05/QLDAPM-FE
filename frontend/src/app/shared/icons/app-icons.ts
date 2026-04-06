@@ -12,6 +12,7 @@ import {
   CircleX,
   Clock3,
   Code,
+  Crown,
   Cpu,
   Database,
   Download,
@@ -19,6 +20,8 @@ import {
   GraduationCap,
   Info,
   LayoutTemplate,
+  Loader,
+  Lock,
   LogOut,
   Map,
   Menu,
@@ -27,10 +30,13 @@ import {
   RefreshCw,
   Save,
   Search,
+  Send,
   Server,
   ShieldCheck,
+  TriangleAlert,
   Users,
   WandSparkles,
+  X,
 } from 'lucide-angular';
 
 export const APP_ICONS = {
@@ -66,6 +72,12 @@ export const APP_ICONS = {
   logOut: LogOut,
   graduationCap: GraduationCap,
   menu: Menu,
+  triangleAlert: TriangleAlert,
+  loader: Loader,
+  crown: Crown,
+  lock: Lock,
+  send: Send,
+  x: X,
 } as const;
 
 export type AppIconKey = keyof typeof APP_ICONS;
