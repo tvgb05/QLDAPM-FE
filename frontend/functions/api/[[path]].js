@@ -9,13 +9,22 @@ export async function onRequest(context) {
   const upstreamPath = pathSegments.join('/');
   const upstreamUrl = `${API_ORIGIN}/api/${upstreamPath}${incomingUrl.search}`;
 
-  const headers = new Headers(request.headers);
-  headers.delete('host');
+  const headers = new Headers();
+  const headerAllowList = ['accept', 'accept-language', 'authorization', 'content-type'];
+  for (const name of headerAllowList) {
+    const value = request.headers.get(name);
+    if (value) {
+      headers.set(name, value);
+    }
+  }
+
+  const isBodyAllowed = request.method !== 'GET' && request.method !== 'HEAD';
+  const body = isBodyAllowed ? await request.arrayBuffer() : undefined;
 
   const init = {
     method: request.method,
     headers,
-    body: request.method === 'GET' || request.method === 'HEAD' ? undefined : request.body,
+    body,
     redirect: 'follow',
   };
 
