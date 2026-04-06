@@ -28,10 +28,42 @@ export async function onRequest(context) {
     redirect: 'follow',
   };
 
-  const upstreamResponse = await fetch(upstreamUrl, init);
-  return new Response(upstreamResponse.body, {
-    status: upstreamResponse.status,
-    statusText: upstreamResponse.statusText,
-    headers: upstreamResponse.headers,
-  });
+  try {
+    const upstreamResponse = await fetch(upstreamUrl, init);
+    const responseHeaders = new Headers(upstreamResponse.headers);
+    const hopByHopHeaders = [
+      'connection',
+      'keep-alive',
+      'proxy-authenticate',
+      'proxy-authorization',
+      'te',
+      'trailer',
+      'transfer-encoding',
+      'upgrade',
+    ];
+    for (const headerName of hopByHopHeaders) {
+      responseHeaders.delete(headerName);
+    }
+
+    const responseBody = await upstreamResponse.arrayBuffer();
+    return new Response(responseBody, {
+      status: upstreamResponse.status,
+      statusText: upstreamResponse.statusText,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: 'API gateway request failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        status: 502,
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+        },
+      }
+    );
+  }
 }
