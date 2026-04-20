@@ -1,0 +1,323 @@
+<div class="fade-in space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-end">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">Quản lý Học kỳ & Giai đoạn</h2>
+      <p class="text-sm text-slate-500">Thiết lập danh sách học kỳ và các mốc thời gian chi tiết cho từng giai đoạn.</p>
+    </div>
+    <button
+      (click)="openSemesterModal()"
+      class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
+    >
+      <lucide-icon [img]="icons.plus" class="w-4 h-4"></lucide-icon>
+      Thêm học kỳ mới
+    </button>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="flex gap-4 items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+    <div class="relative flex-1">
+      <lucide-icon [img]="icons.search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></lucide-icon>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="loadSemesters()"
+        placeholder="Tìm kiếm học kỳ..."
+        class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+    </div>
+    <button (click)="loadSemesters()" class="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold hover:bg-slate-700 transition">
+      Lọc dữ liệu
+    </button>
+  </div>
+
+  <!-- Semesters Table -->
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
+        <tr>
+          <th class="px-6 py-4">Mã học kỳ</th>
+          <th class="px-6 py-4">Tên học kỳ</th>
+          <th class="px-6 py-4">Bắt đầu</th>
+          <th class="px-6 py-4">Kết thúc</th>
+          <th class="px-6 py-4 text-center">Trạng thái</th>
+          <th class="px-6 py-4 text-center">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        @if (loadingSemesters) {
+          <tr>
+            <td colspan="6" class="px-6 py-10 text-center text-blue-600 font-medium">Đang tải danh sách học kỳ...</td>
+          </tr>
+        } @else if (semesters.length === 0) {
+          <tr>
+            <td colspan="6" class="px-6 py-10 text-center text-slate-500">Chưa có học kỳ nào được tạo.</td>
+          </tr>
+        } @else {
+          @for (semester of semesters; track semester.id) {
+            <tr class="hover:bg-slate-50 transition group">
+              <td class="px-6 py-4 font-mono font-bold text-blue-600">{{ semester.code }}</td>
+              <td class="px-6 py-4 font-bold text-slate-700">{{ semester.name }}</td>
+              <td class="px-6 py-4 text-slate-500">{{ semester.startDate | date: 'dd/MM/yyyy' }}</td>
+              <td class="px-6 py-4 text-slate-500">{{ semester.endDate | date: 'dd/MM/yyyy' }}</td>
+              <td class="px-6 py-4 text-center">
+                <span [class]="semester.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'" class="px-2 py-1 rounded-full text-[10px] font-bold uppercase">
+                  {{ semester.isActive ? 'Hoạt động' : 'Tạm khóa' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex justify-center gap-2">
+                   <button (click)="openPeriodListModal(semester)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Quản lý giai đoạn">
+                    <lucide-icon [img]="icons.calendar" class="w-4 h-4"></lucide-icon>
+                  </button>
+                  <button (click)="openSemesterModal(semester)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Chỉnh sửa">
+                    <lucide-icon [img]="icons.pencilLine" class="w-4 h-4"></lucide-icon>
+                  </button>
+                  <button (click)="deleteSemester(semester.id)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Xóa">
+                    <lucide-icon [img]="icons.trash2" class="w-4 h-4"></lucide-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    <!-- Paging -->
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+      <span>Tổng cộng: {{ rowCount }} học kỳ</span>
+      <div class="flex gap-1">
+        <button [disabled]="pageIndex === 1" (click)="goToPage(pageIndex - 1)" class="px-2 py-1 border rounded bg-white hover:bg-slate-50 disabled:opacity-50">Trước</button>
+        <span class="px-3 py-1 bg-white border rounded font-bold text-blue-600">{{ pageIndex }}</span>
+        <button [disabled]="pageIndex * pageSize >= rowCount" (click)="goToPage(pageIndex + 1)" class="px-2 py-1 border rounded bg-white hover:bg-slate-50 disabled:opacity-50">Sau</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Semester Modal (Create/Update) -->
+@if (isSemesterModalOpen) {
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] fade-in">
+    <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-slide-up">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <h3 class="font-black text-slate-800 text-lg uppercase tracking-tight">{{ editingSemester ? 'Cập nhật học kỳ' : 'Thêm học kỳ mới' }}</h3>
+        <button (click)="isSemesterModalOpen = false" class="text-slate-400 hover:text-slate-600 transition"><lucide-icon [img]="icons.x" class="w-6 h-6"></lucide-icon></button>
+      </div>
+      <div class="p-8 space-y-5">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-1">
+            <label class="block text-xs font-black text-slate-500 uppercase mb-2">Mã học kỳ</label>
+            <input type="text" [(ngModel)]="semesterForm.code" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition font-mono" placeholder="Ví dụ: HK232" />
+          </div>
+          <div class="col-span-1">
+            <label class="block text-xs font-black text-slate-500 uppercase mb-2">Trạng thái</label>
+            <div class="flex items-center gap-3 py-3">
+              <input type="checkbox" id="isActive" [(ngModel)]="semesterForm.isActive" class="w-5 h-5 accent-blue-600" />
+              <label for="isActive" class="text-sm font-bold text-slate-700">Đang hoạt động</label>
+            </div>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-black text-slate-500 uppercase mb-2">Tên học kỳ</label>
+            <input type="text" [(ngModel)]="semesterForm.name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="Ví dụ: Học kỳ II - Năm học 2023-2024" />
+          </div>
+          <div class="col-span-1">
+            <label class="block text-xs font-black text-slate-500 uppercase mb-2">Ngày bắt đầu</label>
+            <input type="date" [(ngModel)]="semesterForm.startDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" />
+          </div>
+          <div class="col-span-1">
+            <label class="block text-xs font-black text-slate-500 uppercase mb-2">Ngày kết thúc</label>
+            <input type="date" [(ngModel)]="semesterForm.endDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" />
+          </div>
+        </div>
+      </div>
+      <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+        <button (click)="isSemesterModalOpen = false" class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-200 transition">Hủy bỏ</button>
+        <button (click)="saveSemester()" [disabled]="savingSemester" class="px-8 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition disabled:opacity-50">
+          {{ savingSemester ? 'Đang lưu...' : 'Lưu học kỳ' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Project Periods Modal (List for a Semester) -->
+@if (isPeriodListModalOpen) {
+   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] fade-in">
+    <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col h-[85vh]">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white">
+        <div>
+          <h3 class="font-black text-lg uppercase tracking-tight">Giai đoạn học kỳ: {{ selectedSemester?.name }}</h3>
+          <p class="text-xs text-indigo-200">Quản lý các mốc thời gian chi tiết của học kỳ này.</p>
+        </div>
+        <button (click)="isPeriodListModalOpen = false" class="text-white/60 hover:text-white transition"><lucide-icon [img]="icons.x" class="w-6 h-6"></lucide-icon></button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6 space-y-4 legacy-scroll">
+        <div class="flex justify-end">
+          <button (click)="openPeriodEditModal()" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl font-bold text-xs hover:bg-indigo-200 transition flex items-center gap-2">
+            <lucide-icon [img]="icons.plus" class="w-4 h-4"></lucide-icon> Thêm giai đoạn
+          </button>
+        </div>
+
+        @if (loadingPeriods) {
+           <div class="text-center py-10 text-indigo-600">Đang tải danh sách giai đoạn...</div>
+        } @else if (semesterPeriods.length === 0) {
+          <div class="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <lucide-icon [img]="icons.calendar" class="w-12 h-12 text-slate-300 mx-auto mb-3"></lucide-icon>
+            <p class="text-slate-400 font-bold">Chưa có giai đoạn nào được thiết lập cho học kỳ này.</p>
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 gap-4">
+            @for (period of semesterPeriods; track period.id) {
+              <div class="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md transition group overflow-hidden relative">
+                <div class="absolute top-0 right-[-10px] w-2 h-full bg-indigo-500 opacity-20 group-hover:opacity-100 transition-opacity"></div>
+                <div class="flex justify-between items-start mb-4">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="bg-indigo-100 text-indigo-700 font-black text-[10px] px-2 py-0.5 rounded-full uppercase">Stage {{ period.stage }}</span>
+                      <h4 class="font-black text-slate-800 uppercase tracking-tight">{{ period.name }}</h4>
+                    </div>
+                    <p class="text-xs text-slate-500 italic">{{ period.description || 'Không có mô tả.' }}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button (click)="openPeriodEditModal(period)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"><lucide-icon [img]="icons.pencilLine" class="w-4 h-4"></lucide-icon></button>
+                    <button (click)="deletePeriod(period.id)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><lucide-icon [img]="icons.trash2" class="w-4 h-4"></lucide-icon></button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 text-[10px]">
+                  <div class="space-y-1">
+                    <p class="font-black text-slate-400 uppercase tracking-widest">Đăng ký (Start/End)</p>
+                    <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
+                      {{ period.registrationStart | date: 'dd/MM/yyyy' }} - {{ period.registrationEnd | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="font-black text-slate-400 uppercase tracking-widest">Duyệt đề tài (Start/End)</p>
+                    <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
+                      {{ period.reviewStart | date: 'dd/MM/yyyy' }} - {{ period.reviewEnd | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="font-black text-slate-400 uppercase tracking-widest">Thực hiện đồ án (Start/End)</p>
+                    <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
+                      {{ period.progressStart | date: 'dd/MM/yyyy' }} - {{ period.progressEnd | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="font-black text-slate-400 uppercase tracking-widest">Nộp báo cáo (Start/End)</p>
+                    <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
+                      {{ period.finalSubmitStart | date: 'dd/MM/yyyy' }} - {{ period.finalSubmitEnd | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Period Edit Modal (Add/Edit one Stage) -->
+@if (isPeriodEditModalOpen) {
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70] fade-in">
+    <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col h-[90vh]">
+       <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-800 text-white">
+        <h3 class="font-black text-lg uppercase tracking-tight">{{ editingPeriod ? 'Cập nhật giai đoạn' : 'Thêm giai đoạn mới' }}</h3>
+        <button (click)="isPeriodEditModalOpen = false" class="text-white/60 hover:text-white transition"><lucide-icon [img]="icons.x" class="w-6 h-6"></lucide-icon></button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-8 legacy-scroll">
+        <div class="grid grid-cols-2 gap-8">
+          <!-- Basic Info -->
+          <div class="col-span-2 grid grid-cols-4 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-4">
+             <div class="col-span-2">
+                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Tên giai đoạn</label>
+                <input type="text" [(ngModel)]="periodForm.name" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ví dụ: Giai đoạn 1" />
+             </div>
+             <div class="col-span-1">
+                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Năm học</label>
+                <input type="text" [(ngModel)]="periodForm.academicYear" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono" placeholder="2023-2024" />
+             </div>
+             <div class="col-span-1">
+                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Thứ tự (Stage)</label>
+                <input type="number" [(ngModel)]="periodForm.stage" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+             </div>
+             <div class="col-span-4 mt-2">
+                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Mô tả chi tiết</label>
+                <textarea [(ngModel)]="periodForm.description" rows="2" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nhập mục tiêu giai đoạn..."></textarea>
+             </div>
+          </div>
+
+          <!-- Date Fields -->
+          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
+            <h4 class="font-black text-blue-600 uppercase text-xs tracking-widest border-b pb-2">Thời gian Đăng ký</h4>
+            <div class="grid grid-cols-2 gap-4">
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
+                  <input type="date" [(ngModel)]="periodForm.registrationStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
+                  <input type="date" [(ngModel)]="periodForm.registrationEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+            </div>
+          </div>
+
+          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
+            <h4 class="font-black text-orange-600 uppercase text-xs tracking-widest border-b pb-2">Duyệt Đề tài & Chốt nhóm</h4>
+            <div class="grid grid-cols-2 gap-4">
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
+                  <input type="date" [(ngModel)]="periodForm.reviewStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
+                  <input type="date" [(ngModel)]="periodForm.reviewEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+               <div class="col-span-2">
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 italic">Khóa phân công giảng viên tại</label>
+                  <input type="date" [(ngModel)]="periodForm.assignmentLockAt" class="w-full px-3 py-2 border border-orange-200 bg-orange-50/30 rounded-lg text-sm" />
+               </div>
+            </div>
+          </div>
+
+          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
+            <h4 class="font-black text-green-600 uppercase text-xs tracking-widest border-b pb-2">Thực hiện Đồ án</h4>
+            <div class="grid grid-cols-2 gap-4">
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
+                  <input type="date" [(ngModel)]="periodForm.progressStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
+                  <input type="date" [(ngModel)]="periodForm.progressEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+            </div>
+          </div>
+
+          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
+            <h4 class="font-black text-purple-600 uppercase text-xs tracking-widest border-b pb-2">Nộp Báo cáo cuối kỳ</h4>
+            <div class="grid grid-cols-2 gap-4">
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
+                  <input type="date" [(ngModel)]="periodForm.finalSubmitStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+               <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
+                  <input type="date" [(ngModel)]="periodForm.finalSubmitEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+        <button (click)="isPeriodEditModalOpen = false" class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-200 transition">Hủy bỏ</button>
+        <button (click)="savePeriod()" [disabled]="savingPeriod" class="px-10 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition disabled:opacity-50">
+          {{ savingPeriod ? 'Đang xử lý...' : 'Lưu giai đoạn' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
