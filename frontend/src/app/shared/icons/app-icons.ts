@@ -29,8 +29,10 @@ import {
   Search,
   Server,
   ShieldCheck,
+  Trash2,
   Users,
   WandSparkles,
+  X,
 } from 'lucide-angular';
 
 export const APP_ICONS = {
@@ -66,6 +68,8 @@ export const APP_ICONS = {
   logOut: LogOut,
   graduationCap: GraduationCap,
   menu: Menu,
+  trash2: Trash2,
+  x: X,
 } as const;
 
 export type AppIconKey = keyof typeof APP_ICONS;
