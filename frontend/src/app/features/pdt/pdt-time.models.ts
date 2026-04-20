@@ -1,4 +1,4 @@
-import { ApiResponse } from '../../shared/models/api-response.model';
+import { ApiResponse, PagedResult } from '../../shared/models/api-response.model';
 
 export interface ProjectPeriodResponse {
   id: string;
@@ -8,6 +8,16 @@ export interface ProjectPeriodResponse {
   stage: number;
   status: number;
   semesterId: string;
+  // New date fields from full schema
+  registrationStart: string | null;
+  registrationEnd: string | null;
+  reviewStart: string | null;
+  reviewEnd: string | null;
+  assignmentLockAt: string | null;
+  progressStart: string | null;
+  progressEnd: string | null;
+  finalSubmitStart: string | null;
+  finalSubmitEnd: string | null;
 }
 
 export interface SemesterPublicResponse {
@@ -40,9 +50,57 @@ export interface ProjectPeriodCreateRequest {
   description?: string | null;
   academicYear: string;
   stage?: number | null;
-  semesterId?: string | null;
+  semesterId: string;
+  registrationStart?: string | null;
+  registrationEnd?: string | null;
+  reviewStart?: string | null;
+  reviewEnd?: string | null;
+  assignmentLockAt?: string | null;
+  progressStart?: string | null;
+  progressEnd?: string | null;
+  finalSubmitStart?: string | null;
+  finalSubmitEnd?: string | null;
+  status?: number;
 }
 
+export interface ProjectPeriodUpdateRequest {
+  name?: string | null;
+  description?: string | null;
+  academicYear?: string | null;
+  stage?: number | null;
+  registrationStart?: string | null;
+  registrationEnd?: string | null;
+  reviewStart?: string | null;
+  reviewEnd?: string | null;
+  assignmentLockAt?: string | null;
+  progressStart?: string | null;
+  progressEnd?: string | null;
+  finalSubmitStart?: string | null;
+  finalSubmitEnd?: string | null;
+  status?: number;
+}
+
+export interface SemesterGetPagingRequest {
+  pageIndex: number;
+  pageSize: number;
+  searchTerm?: string;
+}
+
+export interface ProjectGetPagingRequest {
+  pageIndex: number;
+  pageSize: number;
+  searchTerm?: string;
+  semesterId?: string;
+}
+
+export type ProjectPeriodListApiResponse = ApiResponse<ProjectPeriodResponse[]>;
+export type ProjectPeriodApiResponse = ApiResponse<ProjectPeriodResponse>;
+export type ProjectPeriodPagedApiResponse = ApiResponse<PagedResult<ProjectPeriodResponse>>;
+export type SemesterListApiResponse = ApiResponse<SemesterPublicResponse[]>;
+export type SemesterApiResponse = ApiResponse<SemesterPublicResponse>;
+export type SemesterPagedApiResponse = ApiResponse<PagedResult<SemesterPublicResponse>>;
+
+// Legacy form compatibility (can be removed later if not needed)
 export interface TimeConfigForm {
   stage1StartDate: string;
   stage1EndDate: string;
@@ -50,8 +108,3 @@ export interface TimeConfigForm {
   stage2EndDate: string;
   stage3PublishDate: string;
 }
-
-export type ProjectPeriodListApiResponse = ApiResponse<ProjectPeriodResponse[]>;
-export type ProjectPeriodApiResponse = ApiResponse<ProjectPeriodResponse>;
-export type SemesterListApiResponse = ApiResponse<SemesterPublicResponse[]>;
-export type SemesterApiResponse = ApiResponse<SemesterPublicResponse>;

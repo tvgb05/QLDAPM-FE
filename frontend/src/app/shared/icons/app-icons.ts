@@ -33,7 +33,7 @@ import {
   Send,
   Server,
   ShieldCheck,
-  TriangleAlert,
+  Trash2,
   Users,
   WandSparkles,
   X,
@@ -72,11 +72,7 @@ export const APP_ICONS = {
   logOut: LogOut,
   graduationCap: GraduationCap,
   menu: Menu,
-  triangleAlert: TriangleAlert,
-  loader: Loader,
-  crown: Crown,
-  lock: Lock,
-  send: Send,
+  trash2: Trash2,
   x: X,
 } as const;
 
