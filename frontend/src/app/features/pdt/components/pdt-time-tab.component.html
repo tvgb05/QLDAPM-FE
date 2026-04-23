@@ -185,29 +185,23 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 text-[10px]">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-6 text-[10px]">
                   <div class="space-y-1">
-                    <p class="font-black text-slate-400 uppercase tracking-widest">Đăng ký (Start/End)</p>
-                    <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
-                      {{ period.registrationStart | date: 'dd/MM/yyyy' }} - {{ period.registrationEnd | date: 'dd/MM/yyyy' }}
+                    <p class="font-black text-slate-400 uppercase tracking-widest">Loại giai đoạn</p>
+                    <p class="font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded inline-block uppercase">
+                      {{ getPeriodTypeName(period.type) }}
                     </p>
                   </div>
                   <div class="space-y-1">
-                    <p class="font-black text-slate-400 uppercase tracking-widest">Duyệt đề tài (Start/End)</p>
+                    <p class="font-black text-slate-400 uppercase tracking-widest">Ngày bắt đầu</p>
                     <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
-                      {{ period.reviewStart | date: 'dd/MM/yyyy' }} - {{ period.reviewEnd | date: 'dd/MM/yyyy' }}
+                      {{ period.startDate | date: 'dd/MM/yyyy' }}
                     </p>
                   </div>
                   <div class="space-y-1">
-                    <p class="font-black text-slate-400 uppercase tracking-widest">Thực hiện đồ án (Start/End)</p>
+                    <p class="font-black text-slate-400 uppercase tracking-widest">Ngày kết thúc</p>
                     <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
-                      {{ period.progressStart | date: 'dd/MM/yyyy' }} - {{ period.progressEnd | date: 'dd/MM/yyyy' }}
-                    </p>
-                  </div>
-                  <div class="space-y-1">
-                    <p class="font-black text-slate-400 uppercase tracking-widest">Nộp báo cáo (Start/End)</p>
-                    <p class="font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded inline-block">
-                      {{ period.finalSubmitStart | date: 'dd/MM/yyyy' }} - {{ period.finalSubmitEnd | date: 'dd/MM/yyyy' }}
+                      {{ period.endDate | date: 'dd/MM/yyyy' }}
                     </p>
                   </div>
                 </div>
@@ -223,92 +217,47 @@
 <!-- Period Edit Modal (Add/Edit one Stage) -->
 @if (isPeriodEditModalOpen) {
   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70] fade-in">
-    <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col h-[90vh]">
+    <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-800 text-white">
         <h3 class="font-black text-lg uppercase tracking-tight">{{ editingPeriod ? 'Cập nhật giai đoạn' : 'Thêm giai đoạn mới' }}</h3>
         <button (click)="isPeriodEditModalOpen = false" class="text-white/60 hover:text-white transition"><lucide-icon [img]="icons.x" class="w-6 h-6"></lucide-icon></button>
       </div>
       <div class="flex-1 overflow-y-auto p-8 legacy-scroll">
-        <div class="grid grid-cols-2 gap-8">
+        <div class="space-y-6">
           <!-- Basic Info -->
-          <div class="col-span-2 grid grid-cols-4 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-4">
+          <div class="grid grid-cols-2 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
              <div class="col-span-2">
-                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Tên giai đoạn</label>
-                <input type="text" [(ngModel)]="periodForm.name" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ví dụ: Giai đoạn 1" />
+                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Tên giai đoạn hiển thị</label>
+                <input type="text" [(ngModel)]="periodForm.name" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ví dụ: Giai đoạn đăng ký" />
              </div>
              <div class="col-span-1">
-                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Năm học</label>
-                <input type="text" [(ngModel)]="periodForm.academicYear" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono" placeholder="2023-2024" />
+                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Loại giai đoạn (System Type)</label>
+                <select [(ngModel)]="periodForm.type" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                  @for (type of periodTypes; track type.value) {
+                    <option [value]="type.value">{{ type.name }}</option>
+                  }
+                </select>
              </div>
              <div class="col-span-1">
-                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Thứ tự (Stage)</label>
+                <label class="block text-xs font-black text-slate-500 uppercase mb-2">Thứ tự hiển thị (Stage)</label>
                 <input type="number" [(ngModel)]="periodForm.stage" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
              </div>
-             <div class="col-span-4 mt-2">
+             <div class="col-span-2">
                 <label class="block text-xs font-black text-slate-500 uppercase mb-2">Mô tả chi tiết</label>
                 <textarea [(ngModel)]="periodForm.description" rows="2" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nhập mục tiêu giai đoạn..."></textarea>
              </div>
           </div>
 
           <!-- Date Fields -->
-          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
-            <h4 class="font-black text-blue-600 uppercase text-xs tracking-widest border-b pb-2">Thời gian Đăng ký</h4>
-            <div class="grid grid-cols-2 gap-4">
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
-                  <input type="date" [(ngModel)]="periodForm.registrationStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
-                  <input type="date" [(ngModel)]="periodForm.registrationEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-            </div>
-          </div>
-
-          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
-            <h4 class="font-black text-orange-600 uppercase text-xs tracking-widest border-b pb-2">Duyệt Đề tài & Chốt nhóm</h4>
-            <div class="grid grid-cols-2 gap-4">
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
-                  <input type="date" [(ngModel)]="periodForm.reviewStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
-                  <input type="date" [(ngModel)]="periodForm.reviewEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-               <div class="col-span-2">
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 italic">Khóa phân công giảng viên tại</label>
-                  <input type="date" [(ngModel)]="periodForm.assignmentLockAt" class="w-full px-3 py-2 border border-orange-200 bg-orange-50/30 rounded-lg text-sm" />
-               </div>
-            </div>
-          </div>
-
-          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
-            <h4 class="font-black text-green-600 uppercase text-xs tracking-widest border-b pb-2">Thực hiện Đồ án</h4>
-            <div class="grid grid-cols-2 gap-4">
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
-                  <input type="date" [(ngModel)]="periodForm.progressStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
-                  <input type="date" [(ngModel)]="periodForm.progressEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-            </div>
-          </div>
-
-          <div class="p-6 border border-slate-200 rounded-2xl space-y-4">
-            <h4 class="font-black text-purple-600 uppercase text-xs tracking-widest border-b pb-2">Nộp Báo cáo cuối kỳ</h4>
-            <div class="grid grid-cols-2 gap-4">
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bắt đầu</label>
-                  <input type="date" [(ngModel)]="periodForm.finalSubmitStart" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-               <div>
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kết thúc</label>
-                  <input type="date" [(ngModel)]="periodForm.finalSubmitEnd" class="w-full px-3 py-2 border rounded-lg text-sm" />
-               </div>
-            </div>
+          <div class="grid grid-cols-2 gap-4 p-6 border border-slate-200 rounded-2xl">
+             <div class="col-span-1">
+                <label class="block text-sm font-black text-slate-500 uppercase mb-2">Ngày bắt đầu</label>
+                <input type="date" [(ngModel)]="periodForm.startDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+             </div>
+             <div class="col-span-1">
+                <label class="block text-sm font-black text-slate-500 uppercase mb-2">Ngày kết thúc</label>
+                <input type="date" [(ngModel)]="periodForm.endDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+             </div>
           </div>
         </div>
       </div>
