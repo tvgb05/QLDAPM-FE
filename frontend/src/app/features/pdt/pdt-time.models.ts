@@ -1,5 +1,13 @@
 import { ApiResponse, PagedResult } from '../../shared/models/api-response.model';
 
+export enum ProjectPeriodType {
+  MajorSelection = 10,
+  LecturerSelection = 20,
+  LecturerReview = 25,
+  ProjectExecution = 30,
+  FinalDefense = 40,
+}
+
 export interface ProjectPeriodResponse {
   id: string;
   name: string | null;
@@ -8,16 +16,9 @@ export interface ProjectPeriodResponse {
   stage: number;
   status: number;
   semesterId: string;
-  // New date fields from full schema
-  registrationStart: string | null;
-  registrationEnd: string | null;
-  reviewStart: string | null;
-  reviewEnd: string | null;
-  assignmentLockAt: string | null;
-  progressStart: string | null;
-  progressEnd: string | null;
-  finalSubmitStart: string | null;
-  finalSubmitEnd: string | null;
+  type: ProjectPeriodType;
+  startDate: string;
+  endDate: string;
 }
 
 export interface SemesterPublicResponse {
@@ -51,15 +52,9 @@ export interface ProjectPeriodCreateRequest {
   academicYear: string;
   stage?: number | null;
   semesterId: string;
-  registrationStart?: string | null;
-  registrationEnd?: string | null;
-  reviewStart?: string | null;
-  reviewEnd?: string | null;
-  assignmentLockAt?: string | null;
-  progressStart?: string | null;
-  progressEnd?: string | null;
-  finalSubmitStart?: string | null;
-  finalSubmitEnd?: string | null;
+  type: number;
+  startDate: string;
+  endDate: string;
   status?: number;
 }
 
@@ -68,15 +63,9 @@ export interface ProjectPeriodUpdateRequest {
   description?: string | null;
   academicYear?: string | null;
   stage?: number | null;
-  registrationStart?: string | null;
-  registrationEnd?: string | null;
-  reviewStart?: string | null;
-  reviewEnd?: string | null;
-  assignmentLockAt?: string | null;
-  progressStart?: string | null;
-  progressEnd?: string | null;
-  finalSubmitStart?: string | null;
-  finalSubmitEnd?: string | null;
+  type?: number;
+  startDate?: string;
+  endDate?: string;
   status?: number;
 }
 

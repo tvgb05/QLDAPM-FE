@@ -12,6 +12,7 @@ import {
   SemesterUpdateRequest,
   ProjectPeriodCreateRequest,
   ProjectPeriodUpdateRequest,
+  ProjectPeriodType,
 } from '../pdt-time.models';
 import { NotificationItem } from '../../../shared/models/ui.models';
 
@@ -26,6 +27,15 @@ export class PdtTimeTabComponent implements OnInit {
   @Output() notify = new EventEmitter<NotificationItem>();
 
   readonly icons = APP_ICONS;
+  readonly ProjectPeriodType = ProjectPeriodType;
+
+  readonly periodTypes = [
+    { value: ProjectPeriodType.MajorSelection, name: 'Chọn hướng chuyên ngành' },
+    { value: ProjectPeriodType.LecturerSelection, name: 'Đăng ký & Duyệt GVHD' },
+    { value: ProjectPeriodType.LecturerReview, name: 'Duyệt Đề tài & Chốt nhóm' },
+    { value: ProjectPeriodType.ProjectExecution, name: 'Thực hiện Đồ án' },
+    { value: ProjectPeriodType.FinalDefense, name: 'Nộp Báo cáo & Bảo vệ' },
+  ];
 
   // Semester State
   semesters: SemesterPublicResponse[] = [];
@@ -55,20 +65,14 @@ export class PdtTimeTabComponent implements OnInit {
   isPeriodEditModalOpen = false;
   selectedSemester: SemesterPublicResponse | null = null;
   editingPeriod: ProjectPeriodResponse | null = null;
-  periodForm: any = {
+  periodForm = {
     name: '',
     description: '',
     academicYear: '',
     stage: 1,
-    registrationStart: '',
-    registrationEnd: '',
-    reviewStart: '',
-    reviewEnd: '',
-    assignmentLockAt: '',
-    progressStart: '',
-    progressEnd: '',
-    finalSubmitStart: '',
-    finalSubmitEnd: '',
+    type: ProjectPeriodType.MajorSelection,
+    startDate: '',
+    endDate: '',
     status: 0
   };
 
@@ -191,12 +195,15 @@ export class PdtTimeTabComponent implements OnInit {
     })).subscribe({
       next: (res: any) => {
         if (res.success && res.data) {
-          console.log(res.data);
           this.semesterPeriods = res.data.results;
         }
       },
       error: (err) => this.showError(err, 'Không thể tải danh sách giai đoạn.')
     });
+  }
+
+  getPeriodTypeName(type: number): string {
+    return this.periodTypes.find(t => t.value === type)?.name || 'Không xác định';
   }
 
   openPeriodEditModal(period?: ProjectPeriodResponse): void {
@@ -211,16 +218,10 @@ export class PdtTimeTabComponent implements OnInit {
               description: data.description || '',
               academicYear: data.academicYear || this.selectedSemester?.name?.split(' ').pop() || '',
               stage: data.stage,
+              type: data.type,
+              startDate: this.pdtTimeService.toDateInputValue(data.startDate),
+              endDate: this.pdtTimeService.toDateInputValue(data.endDate),
               status: data.status || 0,
-              registrationStart: this.pdtTimeService.toDateInputValue(data.registrationStart),
-              registrationEnd: this.pdtTimeService.toDateInputValue(data.registrationEnd),
-              reviewStart: this.pdtTimeService.toDateInputValue(data.reviewStart),
-              reviewEnd: this.pdtTimeService.toDateInputValue(data.reviewEnd),
-              assignmentLockAt: this.pdtTimeService.toDateInputValue(data.assignmentLockAt),
-              progressStart: this.pdtTimeService.toDateInputValue(data.progressStart),
-              progressEnd: this.pdtTimeService.toDateInputValue(data.progressEnd),
-              finalSubmitStart: this.pdtTimeService.toDateInputValue(data.finalSubmitStart),
-              finalSubmitEnd: this.pdtTimeService.toDateInputValue(data.finalSubmitEnd)
             };
             this.isPeriodEditModalOpen = true;
           } else {
@@ -236,16 +237,10 @@ export class PdtTimeTabComponent implements OnInit {
         description: '',
         academicYear: this.selectedSemester?.name?.split(' ').pop() || '',
         stage: this.semesterPeriods.length + 1,
+        type: ProjectPeriodType.MajorSelection,
+        startDate: '',
+        endDate: '',
         status: 0,
-        registrationStart: '',
-        registrationEnd: '',
-        reviewStart: '',
-        reviewEnd: '',
-        assignmentLockAt: '',
-        progressStart: '',
-        progressEnd: '',
-        finalSubmitStart: '',
-        finalSubmitEnd: ''
       };
       this.isPeriodEditModalOpen = true;
     }
@@ -253,8 +248,8 @@ export class PdtTimeTabComponent implements OnInit {
 
   savePeriod(): void {
     if (!this.selectedSemester) return;
-    if (!this.periodForm.name) {
-      this.notify.emit({ message: 'Vui lòng nhập tên giai đoạn.' });
+    if (!this.periodForm.name || !this.periodForm.startDate || !this.periodForm.endDate) {
+      this.notify.emit({ message: 'Vui lòng nhập đầy đủ tên và thời gian giai đoạn.' });
       return;
     }
 
@@ -262,15 +257,8 @@ export class PdtTimeTabComponent implements OnInit {
     const req: ProjectPeriodCreateRequest = {
       ...this.periodForm,
       semesterId: this.selectedSemester.id,
-      registrationStart: this.pdtTimeService.toIsoDate(this.periodForm.registrationStart),
-      registrationEnd: this.pdtTimeService.toIsoDate(this.periodForm.registrationEnd),
-      reviewStart: this.pdtTimeService.toIsoDate(this.periodForm.reviewStart),
-      reviewEnd: this.pdtTimeService.toIsoDate(this.periodForm.reviewEnd),
-      assignmentLockAt: this.pdtTimeService.toIsoDate(this.periodForm.assignmentLockAt),
-      progressStart: this.pdtTimeService.toIsoDate(this.periodForm.progressStart),
-      progressEnd: this.pdtTimeService.toIsoDate(this.periodForm.progressEnd),
-      finalSubmitStart: this.pdtTimeService.toIsoDate(this.periodForm.finalSubmitStart),
-      finalSubmitEnd: this.pdtTimeService.toIsoDate(this.periodForm.finalSubmitEnd)
+      startDate: this.pdtTimeService.toIsoDate(this.periodForm.startDate) || '',
+      endDate: this.pdtTimeService.toIsoDate(this.periodForm.endDate) || '',
     };
 
     const obs = this.editingPeriod
