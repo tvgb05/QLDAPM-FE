@@ -44,6 +44,10 @@ export class AuthService {
   getCurrentRole(): AppRole {
     return this.currentRoleSubject.value;
   }
+  
+  setRole(role: AppRole): void {
+    this.currentRoleSubject.next(role);
+  }
 
   logout(): void {
     this.currentUserSubject.next(null);

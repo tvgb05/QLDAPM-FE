@@ -10,19 +10,11 @@
     </div>
   </div>
 
-  @if (showRoleSwitch) {
-    <div
-      class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 hidden lg:flex bg-blue-950/50 rounded-lg p-1 text-xs border border-blue-700/50 backdrop-blur-md shadow-inner"
-    >
-      <button (click)="roleChange.emit('student')" [class]="getRoleButtonClass('student')">Sinh viên</button>
-      <button (click)="roleChange.emit('lecturer')" [class]="getRoleButtonClass('lecturer')">Giảng viên</button>
-    </div>
-  }
 
   <div class="flex items-center gap-6">
     <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-800/50 rounded-full border border-blue-700/50">
       <lucide-icon [img]="icons.calendarClock" class="w-3.5 h-3.5 text-blue-300"></lucide-icon>
-      <span class="text-xs font-medium text-blue-100">HK 252</span>
+      <span class="text-xs font-medium text-blue-100">{{ (timeContext.activeSemester$ | async)?.code || '---' }}</span>
     </div>
 
     <div class="hidden xl:block text-right">
@@ -34,9 +26,17 @@
 
     <div class="flex items-center gap-4 group">
       <div class="text-right hidden sm:block">
-        <p class="text-sm font-bold group-hover:text-blue-200 transition">{{ userName }}</p>
+        @if (authService.currentUser$ | async; as user) {
+          <p class="text-sm font-bold group-hover:text-blue-200 transition">
+            {{ user.fullName || user.userName }}
+          </p>
+        } @else {
+          <p class="text-sm font-bold group-hover:text-blue-200 transition">{{ userName || 'Người dùng' }}</p>
+        }
         <div class="flex items-center justify-end gap-1">
-          <span class="text-[10px] bg-blue-500 px-1.5 rounded text-white font-bold">{{ userBadge }}</span>
+          <span class="text-[10px] bg-blue-500 px-1.5 rounded text-white font-bold">
+            {{ (authService.currentRole$ | async) === 'lecturer' ? 'GV' : 'SV' }}
+          </span>
         </div>
       </div>
 
@@ -81,7 +81,7 @@
         </div>
       </div>
 
-      <div class="p-2 hover:bg-red-600/80 hover:text-white text-blue-200 rounded-full transition cursor-pointer" title="Đăng xuất">
+      <div (click)="logout()" class="p-2 hover:bg-red-600/80 hover:text-white text-blue-200 rounded-full transition cursor-pointer" title="Đăng xuất">
         <lucide-icon [img]="icons.logOut" class="w-5 h-5"></lucide-icon>
       </div>
     </div>

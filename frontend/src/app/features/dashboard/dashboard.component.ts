@@ -4,6 +4,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AppHeaderComponent } from '../../shared/components/app-header/app-header.component';
 import { ProjectTimelineComponent } from '../../shared/components/project-timeline/project-timeline.component';
 import { TimeContextService } from '../../shared/services/time-context.service';
+import { AuthService } from '../../shared/services/auth.service';
 import { ProjectPeriodType } from '../pdt/pdt-time.models';
 import { AppRole, NotificationItem } from '../../shared/models/ui.models';
 
@@ -20,9 +21,6 @@ import { ProgressReportComponent } from '../progress-report/progress-report.comp
   template: `
     <div class="bg-slate-50 font-sans text-slate-800 flex flex-col min-h-screen overflow-hidden">
       <app-header
-        [role]="role"
-        [userName]="userName"
-        [userBadge]="userBadge"
         [notifications]="notifications"
         [showNotifications]="showNotifications"
         (roleChange)="switchRole($event)"
@@ -50,9 +48,6 @@ import { ProgressReportComponent } from '../progress-report/progress-report.comp
   `,
 })
 export class DashboardComponent implements OnInit {
-  role: AppRole = 'student';
-  userName = 'Nguyễn Văn A';
-  userBadge = 'SV';
   showNotifications = false;
   notifications: NotificationItem[] = [];
 
@@ -61,6 +56,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private readonly timeContext: TimeContextService,
+    private readonly authService: AuthService,
     private readonly cdr: ChangeDetectorRef
   ) { }
 
@@ -97,11 +93,8 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Common Header Logic (simplified for demo, should be shared)
   switchRole(role: AppRole): void {
-    this.role = role;
-    this.userName = role === 'lecturer' ? 'TS. Giảng Viên A' : 'Nguyễn Văn A';
-    this.userBadge = role === 'lecturer' ? 'GV' : 'SV';
+    this.authService.setRole(role);
   }
 
   toggleNotifications(): void {
