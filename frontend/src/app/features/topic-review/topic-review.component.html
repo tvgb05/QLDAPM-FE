@@ -1,0 +1,62 @@
+<div class="topic-review-page bg-slate-50 font-sans text-slate-800 flex flex-col min-h-screen overflow-hidden" [class.min-h-0]="hideLayout">
+  @if (!hideLayout) {
+    <app-header
+      [role]="role"
+      [userName]="userName"
+      [userBadge]="userBadge"
+      [notifications]="notifications"
+      [showNotifications]="showNotifications"
+      [showRoleSwitch]="false"
+      (roleChange)="switchRole($event)"
+      (toggleNotifications)="toggleNotifications()"
+      (clearNotifications)="clearNotifications()"
+    />
+  }
+
+  <div class="flex flex-1 overflow-hidden" [class.overflow-visible]="hideLayout">
+    @if (!hideLayout) {
+      <app-project-timeline [timeline]="timeline" />
+    }
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50/50 legacy-scroll" [class.p-0]="hideLayout">
+      <div class="max-w-6xl mx-auto pb-10" [class.max-w-none]="hideLayout">
+        <div class="mb-8">
+           <h2 class="text-2xl font-bold text-slate-800 mb-1">Duyệt Đề tài Đồ án</h2>
+           <p class="text-sm text-slate-500">Xem xét và phê duyệt các đề tài do sinh viên đăng ký.</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6">
+           <div *ngFor="let topic of pendingTopics" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all group">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                 <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-3">
+                       <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase tracking-wider">Mã SV: {{ topic.studentId }}</span>
+                       <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase tracking-wider">{{ topic.major }}</span>
+                       <span class="text-[10px] text-slate-400">Nộp ngày: {{ topic.submittedAt }}</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{{ topic.title }}</h3>
+                    <p class="text-sm text-slate-600 font-medium">Sinh viên: {{ topic.name }}</p>
+                 </div>
+                 
+                 <div class="flex items-center gap-3">
+                    <button (click)="approveTopic(topic)" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-green-100">
+                       Duyệt đề tài
+                    </button>
+                    <button (click)="rejectTopic(topic)" class="px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-sm font-bold transition-all">
+                       Từ chối
+                    </button>
+                    <button class="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+                       <lucide-icon [img]="icons.externalLink" class="w-5 h-5"></lucide-icon>
+                    </button>
+                 </div>
+              </div>
+           </div>
+           
+           <div *ngIf="!pendingTopics.length && !loadingData" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+              <p class="text-slate-400 font-medium">Hiện không có đề tài nào chờ duyệt.</p>
+           </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

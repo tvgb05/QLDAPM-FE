@@ -1,0 +1,139 @@
+<div class="lecturer-selection-page bg-slate-50 font-sans text-slate-800 flex flex-col min-h-screen overflow-hidden" [class.min-h-0]="hideLayout">
+  @if (!hideLayout) {
+    <app-header
+      [role]="role"
+      [userName]="userName"
+      [userBadge]="userBadge"
+      [notifications]="notifications"
+      [showNotifications]="showNotifications"
+      [showRoleSwitch]="false"
+      (roleChange)="switchRole($event)"
+      (toggleNotifications)="toggleNotifications()"
+      (clearNotifications)="clearNotifications()"
+    />
+  }
+
+  <div class="flex flex-1 overflow-hidden" [class.overflow-visible]="hideLayout">
+    @if (!hideLayout) {
+      <app-project-timeline [timeline]="timeline" />
+    }
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50/50 legacy-scroll" [class.p-0]="hideLayout">
+      <div class="max-w-6xl mx-auto pb-10" [class.max-w-none]="hideLayout">
+        <!-- Student View -->
+        <div *ngIf="role === 'student'" class="fade-in">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800 mb-1">{{ pageTitle }}</h2>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase tracking-wider">
+                  {{ currentMajorTag }}
+                </span>
+                <span class="text-sm text-slate-500">{{ currentMajorName }}</span>
+              </div>
+            </div>
+
+            <div class="relative w-full md:w-80 group">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <lucide-icon [img]="icons.search" class="w-4 h-4"></lucide-icon>
+              </div>
+              <input
+                type="text"
+                [(ngModel)]="searchTerm"
+                placeholder="Tìm giảng viên..."
+                class="block w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+              />
+            </div>
+          </div>
+
+          <div *ngIf="loadingStudentData" class="flex items-center justify-center py-20">
+             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!loadingStudentData">
+            <app-lecturer-registration-card
+              *ngFor="let item of filteredRegistrations; trackBy: trackRegistration"
+              [item]="item"
+              [saving]="savingRegistrationId === item.id"
+              (register)="toggleRegister(item)"
+            />
+          </div>
+        </div>
+
+        <!-- Lecturer View -->
+        <div *ngIf="role === 'lecturer'" class="fade-in">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800 mb-1">{{ pageTitle }}</h2>
+              <p class="text-sm text-slate-500">Xem và xử lý các yêu cầu đăng ký hướng dẫn từ sinh viên.</p>
+            </div>
+            
+            <div class="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+              <button
+                (click)="switchLecturerTab('pending')"
+                [class]="activeTab === 'pending' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+              >
+                Chờ duyệt
+                <span *ngIf="pendingCount > 0" class="px-1.5 py-0.5 bg-white/20 rounded text-[10px]">{{ pendingCount }}</span>
+              </button>
+              <button
+                (click)="switchLecturerTab('accepted')"
+                [class]="activeTab === 'accepted' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+              >
+                Đã nhận
+                <span *ngIf="acceptedCount > 0" class="px-1.5 py-0.5 bg-white/20 rounded text-[10px]">{{ acceptedCount }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="activeTab === 'pending'">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider">Danh sách yêu cầu ({{ pendingGroups.length }})</h3>
+              <button 
+                *ngIf="pendingGroups.length > 0"
+                (click)="approveAll()"
+                class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5"
+              >
+                <lucide-icon [img]="icons.checkCheck" class="w-4 h-4"></lucide-icon>
+                Duyệt tất cả
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <app-lecturer-request-card
+                *ngFor="let group of pendingGroups; trackBy: trackGroup"
+                [group]="group"
+                [processing]="reviewingRegistrationId === group.registrationId"
+                (action)="handleLecturerAction(group, $event)"
+              />
+            </div>
+            
+            <div *ngIf="!pendingGroups.length" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+               <div class="mx-auto w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-4">
+                 <lucide-icon [img]="icons.inbox" class="w-8 h-8"></lucide-icon>
+               </div>
+               <p class="text-slate-400 font-medium">Hiện không có yêu cầu nào chờ duyệt.</p>
+            </div>
+          </div>
+
+          <div *ngIf="activeTab === 'accepted'" class="fade-in">
+            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">Sinh viên đã nhận ({{ acceptedGroups.length }})</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               <app-lecturer-request-card
+                *ngFor="let group of acceptedGroups; trackBy: trackGroup"
+                [group]="group"
+                [processing]="reviewingRegistrationId === group.registrationId"
+                (action)="handleLecturerAction(group, $event)"
+              />
+            </div>
+            <div *ngIf="!acceptedGroups.length" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+               <p class="text-slate-400 font-medium">Bạn chưa phê duyệt sinh viên nào.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
