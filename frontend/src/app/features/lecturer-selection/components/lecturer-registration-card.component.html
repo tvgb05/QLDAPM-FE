@@ -1,0 +1,47 @@
+<div [class]="cardClass">
+  <div class="flex items-center gap-4 w-full md:w-auto flex-1">
+    <div [class]="initialsClass(item.tone)">{{ item.initials }}</div>
+    <div>
+      <h4 class="font-bold text-slate-800 text-base transition" [ngClass]="lecturerNameClass()">
+        {{ item.lecturer }}
+      </h4>
+      <div class="flex items-center gap-2 mt-0.5">
+        <span [class]="tagClass(item.tone)">{{ item.tag }}</span>
+        <span class="text-xs text-slate-500">{{ item.specialty }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+    <div *ngIf="item.showQuota !== false" class="w-full md:w-40">
+      <div class="flex justify-between text-[10px] mb-1 font-semibold text-slate-500">
+        <span>{{ item.quotaLabel }}</span>
+        <span [class]="quotaValueClass()">{{ item.quotaValue }}</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-1.5">
+        <div class="h-1.5 rounded-full" [class]="item.progressClass" [style.width.%]="item.progress"></div>
+      </div>
+    </div>
+
+    @if (item.full) {
+      <button
+        disabled
+        class="w-full md:w-32 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+      >
+        Đã đầy
+      </button>
+    } @else {
+      <button
+        (click)="register.emit(item)"
+        class="w-full md:w-32 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-2"
+        [class]="item.registered
+          ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+          : 'bg-blue-600 text-white hover:bg-blue-700'"
+      >
+        <span>{{ item.registered ? 'Hủy đăng ký' : 'Đăng ký' }}</span>
+        @if (item.registered) {
+          <lucide-icon [img]="icons.xCircle" class="w-3.5 h-3.5"></lucide-icon>
+        }
+      </button>
+    }
+  </div>
+</div>

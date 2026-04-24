@@ -16,10 +16,14 @@ import {
   Cpu,
   Database,
   Download,
+  ExternalLink,
+  FileText,
   Globe,
   GraduationCap,
+  Inbox,
   Info,
   LayoutTemplate,
+  LucideIconData,
   Loader,
   Lock,
   LogOut,
@@ -35,12 +39,13 @@ import {
   ShieldCheck,
   Trash2,
   TriangleAlert,
+  UploadCloud,
   Users,
   WandSparkles,
   X,
 } from 'lucide-angular';
 
-export const APP_ICONS = {
+export const APP_ICONS: Record<string, LucideIconData> = {
   map: Map,
   check: Check,
   clock3: Clock3,
@@ -80,6 +85,10 @@ export const APP_ICONS = {
   lock: Lock,
   send: Send,
   x: X,
-} as const;
+  externalLink: ExternalLink,
+  fileText: FileText,
+  uploadCloud: UploadCloud,
+  inbox: Inbox,
+};
 
 export type AppIconKey = keyof typeof APP_ICONS;

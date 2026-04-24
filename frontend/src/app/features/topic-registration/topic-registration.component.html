@@ -1,0 +1,136 @@
+<div class="topic-registration-page bg-slate-50 font-sans text-slate-800 flex flex-col min-h-screen overflow-hidden" [class.min-h-0]="hideLayout">
+  @if (!hideLayout) {
+    <app-header
+      [role]="role"
+      [userName]="userName"
+      [userBadge]="userBadge"
+      [notifications]="notifications"
+      [showNotifications]="showNotifications"
+      [showRoleSwitch]="false"
+      (roleChange)="switchRole($event)"
+      (toggleNotifications)="toggleNotifications()"
+      (clearNotifications)="clearNotifications()"
+    />
+  }
+
+  <div class="flex flex-1 overflow-hidden" [class.overflow-visible]="hideLayout">
+    @if (!hideLayout) {
+      <app-project-timeline [timeline]="timeline" />
+    }
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50/50 legacy-scroll" [class.p-0]="hideLayout">
+      <div class="max-w-4xl mx-auto pb-10" [class.max-w-none]="hideLayout">
+        <div class="flex items-center justify-between mb-8">
+           <div>
+             <h2 class="text-2xl font-bold text-slate-800 mb-1">Đăng ký Tên đề tài</h2>
+             <p class="text-sm text-slate-500">Hoàn thiện thông tin đề tài và thành viên nhóm đồ án.</p>
+           </div>
+           <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-500 mr-2">Trạng thái:</span>
+              <span *ngIf="topic.status === 'draft'" class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold border border-slate-200">BẢN NHÁP</span>
+              <span *ngIf="topic.status === 'pending'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold border border-blue-200 animate-pulse">CHỜ DUYỆT</span>
+              <span *ngIf="topic.status === 'approved'" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold border border-green-200">ĐÃ DUYỆT</span>
+           </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Form -->
+            <section class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+              <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Thông tin Đề tài</h3>
+              
+              <div class="space-y-5">
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-2">TÊN ĐỀ TÀI (TIẾNG VIỆT)</label>
+                  <input type="text" [(ngModel)]="topic.vi" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
+                </div>
+                <div>
+                   <label class="block text-xs font-bold text-slate-500 mb-2">TÊN ĐỀ TÀI (TIẾNG ANH)</label>
+                   <input type="text" [(ngModel)]="topic.en" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-2">MÔ TẢ NGẮN GỌN (DỰ KIẾN)</label>
+                  <textarea rows="4" [(ngModel)]="topic.desc" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"></textarea>
+                </div>
+              </div>
+            </section>
+
+            <!-- Members -->
+            <section class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+               <div class="flex items-center justify-between mb-6">
+                  <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Thành viên Nhóm</h3>
+               </div>
+               
+               <div class="space-y-3">
+                 <div *ngFor="let member of members" class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group transition-all">
+                    <div class="flex items-center gap-4">
+                       <div class="w-10 h-10 bg-white rounded-full border-2 border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">
+                         {{ member.id.slice(-3) }}
+                       </div>
+                       <div>
+                         <p class="text-sm font-bold text-slate-800">{{ member.name }}</p>
+                         <p class="text-[10px] text-slate-500">MSSV: {{ member.id }}</p>
+                       </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span *ngIf="member.leader" class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-bold rounded uppercase tracking-wider">Trưởng nhóm</span>
+                    </div>
+                 </div>
+               </div>
+            </section>
+          </div>
+
+          <!-- Actions -->
+          <div class="space-y-6">
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm sticky top-8">
+              <h3 class="text-sm font-bold text-slate-800 mb-4">Hoàn tất Đăng ký</h3>
+              <p class="text-xs text-slate-500 leading-relaxed mb-6">
+                 Đề tài sau khi nộp sẽ được gửi đến Giảng viên hướng dẫn để xem xét và duyệt. Bạn có thể chỉnh sửa trước khi GV duyệt.
+              </p>
+              
+              <div class="space-y-3" *ngIf="role === 'student'">
+                <button 
+                  (click)="submitTopic()"
+                  [disabled]="savingTopic || topic.status === 'approved'"
+                  class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-200"
+                >
+                  {{ savingTopic ? 'Đang lưu...' : 'Lưu và Gửi duyệt' }}
+                </button>
+                <button class="w-full py-4 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-2xl font-bold transition-all">
+                  Xuất mẫu đăng ký (PDF)
+                </button>
+              </div>
+
+              <div class="space-y-3" *ngIf="role === 'lecturer'">
+                 <button (click)="approveTopic()" class="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-green-200">
+                   Duyệt Đề tài
+                 </button>
+                 <button (click)="rejectTopic()" class="w-full py-4 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-2xl font-bold transition-all">
+                   Từ chối / Yêu cầu sửa
+                 </button>
+              </div>
+            </div>
+
+            <div class="bg-slate-800 rounded-3xl p-6 text-white overflow-hidden relative group">
+               <div class="relative z-10">
+                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">GV Hướng dẫn</h4>
+                 <div class="flex items-center gap-4">
+                   <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center font-bold text-blue-400">
+                     TS
+                   </div>
+                   <div>
+                     <p class="text-sm font-bold">TS. Trần Quang Huy</p>
+                     <p class="text-[10px] text-slate-400">Khoa Khoa học Máy tính</p>
+                   </div>
+                 </div>
+               </div>
+               <div class="absolute -bottom-4 -right-4 text-white/5 transform rotate-12 group-hover:scale-110 transition-transform duration-500">
+                  <lucide-icon [img]="icons.users" class="w-32 h-32"></lucide-icon>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
