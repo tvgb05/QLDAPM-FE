@@ -53,8 +53,10 @@ export class LoginComponent {
 
           this.authService.setAuthState(response.data);
           this.showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+          
+          const redirectUrl = this.authService.getRedirectUrl(response.data.userType);
           window.setTimeout(() => {
-            void this.router.navigate(['/gd1']);
+            void this.router.navigate([redirectUrl]);
           }, 800);
         },
         error: (error: { error?: { message?: string | null }; message?: string }) => {
