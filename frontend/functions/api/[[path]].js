@@ -5,30 +5,28 @@ export async function onRequest(context) {
   const url = new URL(request.url);
 
   // Reconstruct the upstream URL
-  // If request is /api/student-registrations/my-registration
-  // It should go to http://222.255.214.35/api/student-registrations/my-registration
   const upstreamUrl = `${API_ORIGIN}${url.pathname}${url.search}`;
 
-  const headers = new Headers();
-  const headerAllowList = [
-    'accept',
-    'accept-language',
-    'authorization',
-    'content-type',
-    'x-requested-with',
-    'user-agent',
-    'referrer',
-    'userId'
-  ];
-  for (const name of headerAllowList) {
-    const value = request.headers.get(name);
-    if (value) {
-      headers.set(name, value);
-    }
+  // Clone headers from original request
+  const headers = new Headers(request.headers);
+  
+  // Remove Cloudflare-specific headers that might confuse the backend
+  headers.delete('cf-connecting-ip');
+  headers.delete('cf-ray');
+  headers.delete('cf-visitor');
+  headers.delete('cf-ipcountry');
+  headers.delete('x-real-ip');
+
+  // Ensure we have Content-Type for POST/PUT requests
+  if (request.method !== 'GET' && request.method !== 'HEAD' && !headers.has('content-type')) {
+    headers.set('content-type', 'application/json');
   }
 
   const isBodyAllowed = request.method !== 'GET' && request.method !== 'HEAD';
-  const body = isBodyAllowed ? await request.arrayBuffer() : undefined;
+  let body;
+  if (isBodyAllowed) {
+    body = await request.arrayBuffer();
+  }
 
   const init = {
     method: request.method,
@@ -39,6 +37,8 @@ export async function onRequest(context) {
 
   try {
     const upstreamResponse = await fetch(upstreamUrl, init);
+    
+    // Copy headers and remove hop-by-hop ones
     const responseHeaders = new Headers(upstreamResponse.headers);
     const hopByHopHeaders = [
       'connection',
@@ -54,11 +54,11 @@ export async function onRequest(context) {
       responseHeaders.delete(headerName);
     }
 
-    const responseBody = await upstreamResponse.arrayBuffer();
+    // Add debug headers
     responseHeaders.set('X-Proxy-Upstream-Url', upstreamUrl);
     responseHeaders.set('X-Proxy-Status', 'Success');
 
-    return new Response(responseBody, {
+    return new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
       headers: responseHeaders,
@@ -69,6 +69,7 @@ export async function onRequest(context) {
         success: false,
         message: 'API gateway request failed',
         error: error instanceof Error ? error.message : 'Unknown error',
+        upstream: upstreamUrl
       }),
       {
         status: 502,
