@@ -1,4 +1,4 @@
-const API_ORIGIN = 'http://222.255.214.35';
+const API_ORIGIN = 'http://222.255.214.35.nip.io';
 
 export async function onRequest(context) {
   const { request } = context;
@@ -9,7 +9,7 @@ export async function onRequest(context) {
 
   // Clone headers from original request
   const headers = new Headers(request.headers);
-  
+
   // Remove Cloudflare-specific headers that might confuse the backend
   headers.delete('cf-connecting-ip');
   headers.delete('cf-ray');
@@ -37,7 +37,7 @@ export async function onRequest(context) {
 
   try {
     const upstreamResponse = await fetch(upstreamUrl, init);
-    
+
     // Copy headers and remove hop-by-hop ones
     const responseHeaders = new Headers(upstreamResponse.headers);
     const hopByHopHeaders = [
