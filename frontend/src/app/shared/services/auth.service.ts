@@ -49,6 +49,17 @@ export class AuthService {
     this.currentRoleSubject.next(role);
   }
 
+  getRedirectUrl(userType: number): string {
+    if (userType === 3) {
+      return '/pdt';
+    }
+    // Student (1) or Lecturer (2)
+    if (userType === 1 || userType === 2) {
+      return '/dashboard';
+    }
+    return '/dashboard'; // Default fallback
+  }
+
   logout(): void {
     this.currentUserSubject.next(null);
     this.currentRoleSubject.next('student');
@@ -56,7 +67,9 @@ export class AuthService {
   }
 
   private mapUserTypeToRole(userType: number): AppRole {
-    return userType === 2 ? 'lecturer' : 'student';
+    if (userType === 2) return 'lecturer';
+    if (userType === 3) return 'pdt';
+    return 'student';
   }
 
   private restoreAuthState(): void {
