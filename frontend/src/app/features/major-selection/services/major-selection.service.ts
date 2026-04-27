@@ -57,11 +57,11 @@ export class MajorSelectionService {
   }
 
   saveStudentSpecialization(payload: MajorRegistrationRequest): Observable<RegistrationApiResponse> {
-    return this.apiService.post<RegistrationApiResponse>('/student-registrations', payload);
+    return this.apiService.post<RegistrationApiResponse>('/StudentProjectRegistration', payload);
   }
 
   cancelStudentSelection(majorId: number): Observable<ApiResponse<string>> {
-    return this.apiService.delete<ApiResponse<string>>(`/student-registrations/my-registration?majorId=${majorId}`);
+    return this.apiService.delete<ApiResponse<string>>(`/StudentProjectRegistration/my-registration?majorId=${majorId}`);
   }
 
   getAllRegistrations(
@@ -70,7 +70,7 @@ export class MajorSelectionService {
     searchTerm: string = '',
     semesterId?: string
   ): Observable<RegistrationPagedApiResponse> {
-    let url = `/student-registrations?PageIndex=${pageIndex}&PageSize=${pageSize}&SearchTerm=${searchTerm}`;
+    let url = `/StudentProjectRegistration?PageIndex=${pageIndex}&PageSize=${pageSize}&SearchTerm=${searchTerm}`;
     if (semesterId) {
       url += `&semesterId=${semesterId}`;
     }
@@ -92,7 +92,7 @@ export class MajorSelectionService {
     }
 
     return this.apiService
-      .get<any>('/student-registrations/my-registration')
+      .get<any>('/StudentProjectRegistration/my-registration')
       .pipe(
         map((response) => {
           console.log('my-registration response:', response);
