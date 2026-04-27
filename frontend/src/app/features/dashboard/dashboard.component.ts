@@ -67,7 +67,6 @@ export class DashboardComponent implements OnInit {
     });
 
     this.timeContext.activePeriod$.subscribe(period => {
-      console.log('period111', period);
       if (!period) {
         this.currentComponent = null;
       } else {

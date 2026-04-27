@@ -1,4 +1,4 @@
-export type PdtTab = 'time' | 'topics' | 'allocation' | 'report';
+export type PdtTab = 'time' | 'topics' | 'allocation' | 'report' | 'major-registrations';
 export type ReportKey = 'topic01' | 'topic02';
 
 export interface TopicItem {

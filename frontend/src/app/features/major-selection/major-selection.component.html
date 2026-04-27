@@ -78,10 +78,12 @@
                 <p class="text-sm text-slate-500 mb-6 flex-1">{{ item.description }}</p>
                 <button
                   (click)="toggleSelection(item)"
-                  [disabled]="loadingStudentData || loadingStudentSelection || (selectedSpecializationId && selectedSpecializationId !== item.id)"
+                  [disabled]="loadingStudentData || loadingStudentSelection || savingSelection || (selectedSpecializationId && selectedSpecializationId !== item.id)"
                   [class]="getSpecializationButtonClass(item)"
                 >
-                  <span>{{ getSpecializationButtonLabel(item) }}</span>
+                  <lucide-icon *ngIf="savingSelection" [img]="icons.loader" class="w-4 h-4 animate-spin"></lucide-icon>
+                  <span *ngIf="!savingSelection">{{ getSpecializationButtonLabel(item) }}</span>
+                  <span *ngIf="savingSelection">Đang lưu...</span>
                 </button>
               </div>
             </div>

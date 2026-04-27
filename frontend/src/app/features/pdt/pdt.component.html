@@ -31,6 +31,10 @@
           @if (activeTab === 'report') {
             <app-pdt-report-tab (notify)="addNotification($event)" />
           }
+
+          @if (activeTab === 'major-registrations') {
+            <app-major-registrations-list />
+          }
         </div>
       </div>
     </main>

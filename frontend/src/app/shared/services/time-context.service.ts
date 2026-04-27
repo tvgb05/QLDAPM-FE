@@ -67,10 +67,10 @@ export class TimeContextService {
   }
 
   private fetchMajors(): void {
-    this.apiService.get<ApiResponse<{ results: MajorResponse[] }>>('/AppMajor/paging?PageIndex=1&PageSize=100')
+    this.apiService.get<ApiResponse<MajorResponse[]>>('/majors')
       .subscribe(res => {
         if (res.success && res.data) {
-          this.majorsSubject.next(res.data.results);
+          this.majorsSubject.next(res.data);
         }
       });
   }

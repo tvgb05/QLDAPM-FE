@@ -54,6 +54,7 @@ export class MajorSelectionComponent implements OnInit {
     }
 
     if (this.role === 'student') {
+      this.studentId = currentUser?.id || null;
       this.loadStudentData();
     }
   }
@@ -116,8 +117,28 @@ export class MajorSelectionComponent implements OnInit {
     }
 
     if (this.selectedSpecializationId === target.id) {
-      this.selectedSpecializationId = null;
-      this.addNotification(`Bạn đã hủy đăng ký hướng chuyên ngành: ${target.name}`);
+      this.savingSelection = true;
+      this.majorSelectionService
+        .cancelStudentSelection(Number(target.id))
+        .pipe(finalize(() => {
+          this.savingSelection = false;
+          this.cdr.detectChanges();
+        }))
+        .subscribe({
+          next: () => {
+            this.selectedSpecializationId = null;
+            this.addNotification(`Bạn đã hủy đăng ký hướng chuyên ngành: ${target.name}`);
+            this.cdr.detectChanges();
+          },
+          error: (error: { message?: string; error?: { message?: string | null } }) => {
+            this.addNotification(
+              error.error?.message ??
+                error.message ??
+                `Không thể hủy đăng ký chuyên ngành ${target.name}.`
+            );
+            this.cdr.detectChanges();
+          },
+        });
       return;
     }
 
@@ -136,7 +157,6 @@ export class MajorSelectionComponent implements OnInit {
     }
 
     const payload: MajorRegistrationRequest = {
-      studentId: this.studentId,
       projectPeriodId: this.projectPeriodId,
       selectedMajorId: Number(target.id),
       choices: [],
@@ -145,11 +165,15 @@ export class MajorSelectionComponent implements OnInit {
     this.savingSelection = true;
     this.majorSelectionService
       .saveStudentSpecialization(payload)
-      .pipe(finalize(() => (this.savingSelection = false)))
+      .pipe(finalize(() => {
+        this.savingSelection = false;
+        this.cdr.detectChanges();
+      }))
       .subscribe({
         next: () => {
           this.selectedSpecializationId = target.id;
           this.addNotification(`Đăng ký thành công hướng chuyên ngành: ${target.name}`);
+          this.cdr.detectChanges();
         },
         error: (error: { message?: string; error?: { message?: string | null } }) => {
           this.addNotification(
@@ -157,6 +181,7 @@ export class MajorSelectionComponent implements OnInit {
               error.message ??
               `Không thể lưu chuyên ngành ${target.name} lên hệ thống.`
           );
+          this.cdr.detectChanges();
         },
       });
   }
@@ -194,7 +219,7 @@ export class MajorSelectionComponent implements OnInit {
 
   getSpecializationButtonLabel(item: Specialization): string {
     if (this.selectedSpecializationId === item.id) {
-      return 'Đã đăng ký';
+      return 'Hủy đăng ký';
     }
 
     if (this.selectedSpecializationId && this.selectedSpecializationId !== item.id) {
@@ -272,7 +297,7 @@ export class MajorSelectionComponent implements OnInit {
       }))
       .subscribe({
         next: (result) => {
-          this.studentId = result.studentId;
+          this.studentId = result.studentId || this.studentId;
           this.selectedSpecializationId = result.selectedMajorId;
 
           if (!result.studentId) {
