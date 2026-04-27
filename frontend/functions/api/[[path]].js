@@ -1,23 +1,24 @@
-const API_ORIGIN = 'http://222.255.214.35.nip.io';
+const API_ORIGIN = 'http://222.255.214.35';
 
 export async function onRequest(context) {
-  const { request, params } = context;
+  const { request } = context;
+  const url = new URL(request.url);
 
-  const incomingUrl = new URL(request.url);
-  const rawPath = params.path;
-  const pathSegments = Array.isArray(rawPath) ? rawPath : rawPath ? [rawPath] : [];
-  const upstreamPath = pathSegments.join('/');
-  const upstreamUrl = `${API_ORIGIN}/api/${upstreamPath}${incomingUrl.search}`;
+  // Reconstruct the upstream URL
+  // If request is /api/student-registrations/my-registration
+  // It should go to http://222.255.214.35/api/student-registrations/my-registration
+  const upstreamUrl = `${API_ORIGIN}${url.pathname}${url.search}`;
 
   const headers = new Headers();
   const headerAllowList = [
-    'accept', 
-    'accept-language', 
-    'authorization', 
+    'accept',
+    'accept-language',
+    'authorization',
     'content-type',
     'x-requested-with',
     'user-agent',
-    'referrer'
+    'referrer',
+    'userId'
   ];
   for (const name of headerAllowList) {
     const value = request.headers.get(name);
@@ -54,6 +55,9 @@ export async function onRequest(context) {
     }
 
     const responseBody = await upstreamResponse.arrayBuffer();
+    responseHeaders.set('X-Proxy-Upstream-Url', upstreamUrl);
+    responseHeaders.set('X-Proxy-Status', 'Success');
+
     return new Response(responseBody, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
