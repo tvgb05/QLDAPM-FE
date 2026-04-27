@@ -44,5 +44,6 @@ export class PdtAdminSidebarComponent {
     { id: 'topics', label: 'Q.Lý Đề tài & GV', icon: 'plus', iconClass: 'bg-orange-100 text-orange-700' },
     { id: 'allocation', label: 'Phân công Sinh viên', icon: 'users', iconClass: 'bg-purple-100 text-purple-700' },
     { id: 'report', label: 'Tổng hợp Kết quả', icon: 'building2', iconClass: 'bg-green-100 text-green-700' },
+    { id: 'major-registrations', label: 'Đăng ký Chuyên ngành', icon: 'graduationCap', iconClass: 'bg-cyan-100 text-cyan-700' },
   ];
 }

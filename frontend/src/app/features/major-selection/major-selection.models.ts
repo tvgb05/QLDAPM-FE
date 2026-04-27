@@ -36,23 +36,28 @@ export interface MajorResponse {
   facultyId: string | null;
 }
 
-export interface Gd1RegistrationResponse {
+export interface RegistrationResponse {
   id: string;
   studentId: string;
+  studentName?: string;
+  studentCode?: string;
   projectPeriodId: string;
   selectedMajorId: number;
+  selectedMajorName?: string;
+  status: number; // 0: Pending, 1: Approved, 2: Rejected
+  submittedAt: string;
   choices: any[];
 }
 
 export interface MajorRegistrationRequest {
-  studentId: string;
   projectPeriodId: string;
   selectedMajorId: number;
-  choices: any[];
+  choices: { lecturerId: string; priorityOrder: number }[];
 }
 
 export type MajorResponseListApiResponse = ApiResponse<MajorResponse[]>;
-export type Gd1RegistrationApiResponse = ApiResponse<Gd1RegistrationResponse>;
-export type Gd1RegistrationPagedApiResponse = ApiResponse<PagedResult<Gd1RegistrationResponse>>;
+export type RegistrationApiResponse = ApiResponse<RegistrationResponse>;
+export type RegistrationListApiResponse = ApiResponse<RegistrationResponse[]>;
+export type RegistrationPagedApiResponse = ApiResponse<PagedResult<RegistrationResponse>>;
 export type ProjectPeriodResponsePagedApiResponse = ApiResponse<PagedResult<ProjectPeriodResponse>>;
 export type SemesterListApiResponse = ApiResponse<SemesterPublicResponse[]>;

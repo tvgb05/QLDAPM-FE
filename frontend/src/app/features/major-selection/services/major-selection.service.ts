@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
-import { catchError, forkJoin, map, Observable, of } from 'rxjs';
+import { catchError, combineLatest, forkJoin, map, Observable, of } from 'rxjs';
 
 import { ApiResponse } from '../../../shared/models/api-response.model';
 import { TimelineStep } from '../../../shared/models/ui.models';
 import { ApiService } from '../../../shared/services/api.service';
+import { TimeContextService } from '../../../shared/services/time-context.service';
 import { AuthResponse } from '../../../shared/models/auth-response.model';
 import {
   FacultyResponse,
-  Gd1RegistrationApiResponse,
+  RegistrationApiResponse,
   MajorRegistrationRequest,
-  Gd1RegistrationPagedApiResponse,
+  RegistrationPagedApiResponse,
   MajorResponse,
   MajorResponseListApiResponse,
   ProjectPeriodResponse,
@@ -23,41 +24,57 @@ import {
   providedIn: 'root',
 })
 export class MajorSelectionService {
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly timeContext: TimeContextService
+  ) { }
 
   loadBaseStudentContext(): Observable<{
     specializations: Specialization[];
     timeline: TimelineStep[];
     projectPeriodId: string | null;
   }> {
-    return forkJoin({
-      majorsResponse: this.apiService.get<MajorResponseListApiResponse>('/AppMajor/public-data'),
+    return combineLatest({
+      majors: this.timeContext.majors$,
+      periods: this.timeContext.allPeriodsInSemester$,
+      activePeriod: this.timeContext.activePeriod$,
+      activeSemester: this.timeContext.activeSemester$,
       facultiesResponse: this.apiService.get<ApiResponse<{ results: FacultyResponse[] }>>(
         '/AppFaculty/paging?PageIndex=1&PageSize=100'
       ),
-      periodsResponse: this.apiService.get<ProjectPeriodResponsePagedApiResponse>(
-        '/ProjectPeriod/paging?PageIndex=1&PageSize=20'
-      ),
-      semestersResponse: this.apiService.get<SemesterListApiResponse>('/Semester/public-data'),
     }).pipe(
-      map(({ majorsResponse, facultiesResponse, periodsResponse, semestersResponse }) => {
-        const majors = majorsResponse.data ?? [];
+      map(({ majors, periods, activePeriod, activeSemester, facultiesResponse }) => {
         const faculties = facultiesResponse.data?.results ?? [];
-        const periods = periodsResponse.data?.results ?? [];
-        const semesters = semestersResponse.data ?? [];
-        const baseContext = {
+        const semesters = activeSemester ? [activeSemester] : [];
+
+        return {
           specializations: this.mapSpecializations(majors, faculties),
           timeline: this.mapTimeline(periods, semesters),
-          projectPeriodId: periods.find((period) => period.stage === 1)?.id ?? null,
+          projectPeriodId: activePeriod?.id ?? null,
         };
-
-        return baseContext;
       })
     );
   }
 
-  saveStudentSpecialization(payload: MajorRegistrationRequest): Observable<Gd1RegistrationApiResponse> {
-    return this.apiService.post<Gd1RegistrationApiResponse>('/StudentProjectRegistration', payload);
+  saveStudentSpecialization(payload: MajorRegistrationRequest): Observable<RegistrationApiResponse> {
+    return this.apiService.post<RegistrationApiResponse>('/student-registrations', payload);
+  }
+
+  cancelStudentSelection(majorId: number): Observable<ApiResponse<string>> {
+    return this.apiService.delete<ApiResponse<string>>(`/student-registrations/my-registration?majorId=${majorId}`);
+  }
+
+  getAllRegistrations(
+    pageIndex: number = 1,
+    pageSize: number = 20,
+    searchTerm: string = '',
+    semesterId?: string
+  ): Observable<RegistrationPagedApiResponse> {
+    let url = `/student-registrations?PageIndex=${pageIndex}&PageSize=${pageSize}&SearchTerm=${searchTerm}`;
+    if (semesterId) {
+      url += `&semesterId=${semesterId}`;
+    }
+    return this.apiService.get<RegistrationPagedApiResponse>(url);
   }
 
   loadStudentSelection(
@@ -75,20 +92,17 @@ export class MajorSelectionService {
     }
 
     return this.apiService
-      .get<Gd1RegistrationPagedApiResponse>('/StudentProjectRegistration/paging?PageIndex=1&PageSize=200')
+      .get<any>('/student-registrations/my-registration')
       .pipe(
-        map((registrationsResponse) => {
-          const registrations = registrationsResponse.data?.results ?? [];
-          const currentRegistration =
-            registrations.find(
-              (registration) =>
-                registration.studentId === currentUser.id &&
-                registration.projectPeriodId === projectPeriodId
-            ) ?? null;
+        map((response) => {
+          console.log('my-registration response:', response);
+          // The API might return an array or a single object
+          const data = response.data;
+          const registration = Array.isArray(data) ? data[0] : data;
 
           return {
             studentId: currentUser.id,
-            selectedMajorId: currentRegistration?.selectedMajorId?.toString() ?? null,
+            selectedMajorId: registration?.selectedMajorId?.toString() ?? null,
           };
         }),
         catchError(() =>

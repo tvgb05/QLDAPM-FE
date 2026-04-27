@@ -31,25 +31,25 @@ export class ProjectTimelineComponent {
     this.timeContext.allPeriodsInSemester$.subscribe(periods => {
       if (periods.length > 0) {
         this.buildDynamicTimeline(periods);
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
 
     this.timeContext.activeSemester$.subscribe(s => {
       if (s) {
         this.currentSemesterName = s.name || 'Chưa xác định';
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
 
     this.timeContext.activePeriod$.subscribe(p => {
       this.activePeriodType = p?.type || null;
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     });
 
     this.timeContext.majors$.subscribe(m => {
       this.majors = m;
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     });
   }
 
