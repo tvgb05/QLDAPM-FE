@@ -10,7 +10,15 @@ export async function onRequest(context) {
   const upstreamUrl = `${API_ORIGIN}/api/${upstreamPath}${incomingUrl.search}`;
 
   const headers = new Headers();
-  const headerAllowList = ['accept', 'accept-language', 'authorization', 'content-type'];
+  const headerAllowList = [
+    'accept', 
+    'accept-language', 
+    'authorization', 
+    'content-type',
+    'x-requested-with',
+    'user-agent',
+    'referrer'
+  ];
   for (const name of headerAllowList) {
     const value = request.headers.get(name);
     if (value) {
