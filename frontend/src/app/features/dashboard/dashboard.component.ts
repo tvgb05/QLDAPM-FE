@@ -11,6 +11,7 @@ import { AppRole, NotificationItem } from '../../shared/models/ui.models';
 // Import target components
 import { MajorSelectionComponent } from '../major-selection/major-selection.component';
 import { LecturerSelectionComponent } from '../lecturer-selection/lecturer-selection.component';
+import { TopicRegistrationComponent } from '../topic-registration/topic-registration.component';
 import { TopicReviewComponent } from '../topic-review/topic-review.component';
 import { ProgressReportComponent } from '../progress-report/progress-report.component';
 
@@ -70,6 +71,7 @@ export class DashboardComponent implements OnInit {
       if (!period) {
         this.currentComponent = null;
       } else {
+        const role = this.authService.getCurrentRole();
         switch (period.type) {
           case ProjectPeriodType.MajorSelection:
             this.currentComponent = MajorSelectionComponent;
@@ -78,7 +80,9 @@ export class DashboardComponent implements OnInit {
             this.currentComponent = LecturerSelectionComponent;
             break;
           case ProjectPeriodType.LecturerReview:
-            this.currentComponent = TopicReviewComponent;
+            this.currentComponent = role === 'lecturer'
+              ? TopicReviewComponent
+              : TopicRegistrationComponent;
             break;
           case ProjectPeriodType.ProjectExecution:
           case ProjectPeriodType.FinalDefense:

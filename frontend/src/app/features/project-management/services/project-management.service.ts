@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { forkJoin, map, Observable, of } from 'rxjs';
 
+import { ApiResponse } from '../../../shared/models/api-response.model';
 import { AuthResponse } from '../../../shared/models/auth-response.model';
 import { TimelineStep } from '../../../shared/models/ui.models';
 import { ApiService } from '../../../shared/services/api.service';
@@ -16,14 +17,18 @@ import {
   ProjectPeriodResponsePagedApiResponse,
   ProjectTeamCreateRequest,
   ProjectTeamResponseApiResponse,
+  ProjectTeamResponsePagedApiResponse,
   ProjectTeamUpdateRequest,
   ProjectTopicCreateRequest,
   ProjectTopicResponseApiResponse,
+  ProjectTopicResponsePagedApiResponse,
+  ProjectTopicListApiResponse,
   ProjectTopicUpdateRequest,
   SemesterListApiResponse,
   SemesterPublicResponse,
   StudentResponse,
   StudentResponsePagedApiResponse,
+  TeacherAssignmentListApiResponse,
 } from '../project-management.models';
 
 @Injectable({
@@ -159,6 +164,41 @@ export class ProjectManagementService {
 
   deleteFinalSubmission(id: string): Observable<void> {
     return this.apiService.delete<void>(`/FinalSubmission/${id}`);
+  }
+
+  listTopics(
+    pageIndex: number,
+    pageSize: number,
+    semesterId?: string
+  ): Observable<ProjectTopicResponsePagedApiResponse> {
+    let url = `/ProjectTopic/paging?PageIndex=${pageIndex}&PageSize=${pageSize}`;
+    if (semesterId) {
+      url += `&SemesterId=${semesterId}`;
+    }
+    return this.apiService.get<ProjectTopicResponsePagedApiResponse>(url);
+  }
+
+  listAllTopics(): Observable<ProjectTopicListApiResponse> {
+    return this.apiService.get<ProjectTopicListApiResponse>('/ProjectTopic/public-data');
+  }
+
+  listTeams(
+    pageIndex: number,
+    pageSize: number
+  ): Observable<ProjectTeamResponsePagedApiResponse> {
+    return this.apiService.get<ProjectTeamResponsePagedApiResponse>(
+      `/ProjectTeam/paging?PageIndex=${pageIndex}&PageSize=${pageSize}`
+    );
+  }
+
+  getTeamAssignments(teamId: string): Observable<TeacherAssignmentListApiResponse> {
+    return this.apiService.get<TeacherAssignmentListApiResponse>(
+      `/ProjectTeam/${teamId}/assignments`
+    );
+  }
+
+  getLecturer(id: string): Observable<ApiResponse<LecturerResponse>> {
+    return this.apiService.get<ApiResponse<LecturerResponse>>(`/AppLecturer/${id}`);
   }
 
   private mapTimeline(

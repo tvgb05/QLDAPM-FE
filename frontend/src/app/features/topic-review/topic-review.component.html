@@ -6,7 +6,7 @@
       [userBadge]="userBadge"
       [notifications]="notifications"
       [showNotifications]="showNotifications"
-      
+
       (roleChange)="switchRole($event)"
       (toggleNotifications)="toggleNotifications()"
       (clearNotifications)="clearNotifications()"
@@ -18,45 +18,306 @@
       <app-project-timeline [timeline]="timeline" />
     }
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50/50 legacy-scroll" [class.p-0]="hideLayout">
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50/50" [class.p-0]="hideLayout">
       <div class="max-w-6xl mx-auto pb-10" [class.max-w-none]="hideLayout">
-        <div class="mb-8">
-           <h2 class="text-2xl font-bold text-slate-800 mb-1">Duyệt Đề tài Đồ án</h2>
-           <p class="text-sm text-slate-500">Xem xét và phê duyệt các đề tài do sinh viên đăng ký.</p>
+
+        <!-- =============== MILESTONE PANEL =============== -->
+        <div class="bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100 rounded-2xl relative overflow-hidden transition-all duration-500 shadow-sm mb-8">
+          <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <lucide-icon [img]="icons.calendar" class="w-24 h-24 text-blue-900"></lucide-icon>
+          </div>
+
+          <div (click)="toggleMilestones()"
+               class="p-5 flex items-center justify-between cursor-pointer group relative z-10">
+            <div class="flex items-center gap-4">
+              <div class="p-2 bg-blue-600 text-white rounded-lg shadow-blue-200 shadow-lg">
+                <lucide-icon [img]="icons.calendarClock" class="w-5 h-5"></lucide-icon>
+              </div>
+              <div>
+                <h2 class="text-base font-bold text-blue-900">Thời hạn chi tiết</h2>
+                <p class="text-xs text-blue-700/70 mt-0.5">Hạn nộp hoạt động hiện tại: <span class="font-bold text-red-600">28/02/2026</span></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-blue-600 text-xs font-bold px-3 py-1.5 hover:bg-blue-100 rounded-lg transition">
+                {{ milestonesExpanded ? 'Thu gọn' : 'Chi tiết' }}
+              </span>
+              <lucide-icon [img]="icons.chevronDown" class="w-5 h-5 text-blue-400 transition-transform duration-300"
+                           [class.rotate-180]="milestonesExpanded"></lucide-icon>
+            </div>
+          </div>
+
+          <div *ngIf="milestonesExpanded" class="transition-all duration-500 ease-in-out overflow-hidden">
+            <div class="p-6 pt-0 border-t border-blue-100/50 relative z-10">
+              <p class="text-xs text-blue-700/80 mb-4 mt-4 italic">Lưu ý: Thời gian thiết lập phải nằm trong khung thời gian tổng của Phòng Đào tạo.</p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white/60 p-4 rounded-xl border border-blue-100 shadow-sm hover:border-blue-300 transition">
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Phân công &amp; Chọn Đề tài</label>
+                  <input type="date" value="2026-02-28"
+                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition" />
+                </div>
+                <div class="bg-white/60 p-4 rounded-xl border border-blue-100 shadow-sm hover:border-blue-300 transition">
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Báo cáo tiến độ 1</label>
+                  <input type="date" value="2026-03-15"
+                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition" />
+                </div>
+                <div class="bg-white/60 p-4 rounded-xl border border-blue-100 shadow-sm hover:border-blue-300 transition">
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Báo cáo tiến độ 2</label>
+                  <input type="date" value="2026-04-20"
+                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition" />
+                </div>
+                <div class="bg-white/60 p-4 rounded-xl border border-blue-100 shadow-sm hover:border-blue-300 transition">
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Nộp báo cáo cuối kỳ</label>
+                  <input type="date" value="2026-06-15"
+                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition" />
+                </div>
+              </div>
+              <div class="mt-4 flex justify-end gap-2">
+                <button disabled class="bg-slate-200 text-slate-400 cursor-not-allowed px-6 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2">
+                  <lucide-icon [img]="icons.save" class="w-4 h-4"></lucide-icon> Cập nhật
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-6">
-           <div *ngFor="let topic of pendingTopics" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all group">
-              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                 <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-3">
-                       <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase tracking-wider">Mã SV: {{ topic.studentId }}</span>
-                       <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase tracking-wider">{{ topic.major }}</span>
-                       <span class="text-[10px] text-slate-400">Nộp ngày: {{ topic.submittedAt }}</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{{ topic.title }}</h3>
-                    <p class="text-sm text-slate-600 font-medium">Sinh viên: {{ topic.name }}</p>
-                 </div>
-                 
-                 <div class="flex items-center gap-3">
-                    <button (click)="approveTopic(topic)" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-green-100">
-                       Duyệt đề tài
-                    </button>
-                    <button (click)="rejectTopic(topic)" class="px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-sm font-bold transition-all">
-                       Từ chối
-                    </button>
-                    <button class="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
-                       <lucide-icon [img]="icons.externalLink" class="w-5 h-5"></lucide-icon>
-                    </button>
-                 </div>
-              </div>
-           </div>
-           
-           <div *ngIf="!pendingTopics.length && !loadingData" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
-              <p class="text-slate-400 font-medium">Hiện không có đề tài nào chờ duyệt.</p>
-           </div>
+        <!-- =============== HEADER + SEARCH =============== -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4 border-b border-slate-200 pb-6">
+          <div>
+            <h3 class="font-bold text-slate-800 text-xl md:text-2xl">Danh sách Nhóm hướng dẫn</h3>
+            <p class="text-sm text-slate-500 mt-1">Tổng cộng: <span class="font-bold text-blue-600">{{ groups.length }}</span> nhóm</p>
+          </div>
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <div class="relative flex-1 md:flex-none">
+              <lucide-icon [img]="icons.search" class="absolute left-3 top-2.5 text-slate-400 w-4 h-4"></lucide-icon>
+              <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                     placeholder="Tìm kiếm nhóm..."
+                     class="pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 shadow-sm transition" />
+            </div>
+          </div>
         </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loadingData" class="flex flex-col items-center justify-center py-20 animate-pulse">
+          <div class="w-12 h-12 bg-blue-100 rounded-full mb-4 flex items-center justify-center">
+            <lucide-icon [img]="icons.loader" class="w-5 h-5 text-blue-500 animate-spin"></lucide-icon>
+          </div>
+          <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Đang tải danh sách...</p>
+        </div>
+
+        <!-- =============== GROUP CARDS (Single column, full width like mockup) =============== -->
+        <div *ngIf="!loadingData" class="grid grid-cols-1 gap-5">
+          <div *ngFor="let group of filteredGroups"
+               (click)="openDetailModal(group)"
+               class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-pointer transition relative overflow-hidden group"
+               [class.opacity-80]="group.status === 'approved'"
+               [class.hover:border-blue-300]="group.status !== 'approved'">
+            <!-- Hover hint -->
+            <div class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg">Xem chi tiết &rarr;</span>
+            </div>
+
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h4 class="font-bold text-slate-800 text-lg flex items-center gap-3 mb-3">
+                  {{ group.teamName }}
+                  <!-- Status badge -->
+                  <ng-container [ngSwitch]="group.status">
+                    <span *ngSwitchCase="'pending'" class="bg-yellow-100 text-yellow-700 text-[10px] px-2.5 py-1 rounded-md font-bold uppercase animate-pulse flex items-center gap-1">
+                      <lucide-icon [img]="icons.loader" class="w-3 h-3 animate-spin"></lucide-icon> Chờ duyệt
+                    </span>
+                    <span *ngSwitchCase="'approved'" class="bg-green-100 text-green-700 text-[10px] px-2.5 py-1 rounded-md font-bold uppercase flex items-center gap-1">
+                      <lucide-icon [img]="icons.check" class="w-3 h-3"></lucide-icon> Đã duyệt
+                    </span>
+                    <span *ngSwitchCase="'rejected'" class="bg-red-100 text-red-700 text-[10px] px-2.5 py-1 rounded-md font-bold uppercase flex items-center gap-1">
+                      <lucide-icon [img]="icons.circleAlert" class="w-3 h-3"></lucide-icon> Đã yêu cầu sửa
+                    </span>
+                    <span *ngSwitchDefault class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded font-bold uppercase">Chưa gửi đề tài</span>
+                  </ng-container>
+                </h4>
+                <!-- Topic preview -->
+                <div class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 w-full md:w-3/4">
+                  <div *ngIf="group.topicTitle && group.status !== 'draft'">
+                    <p class="font-bold text-slate-800 line-clamp-1">{{ group.topicTitle }}</p>
+                    <p *ngIf="group.topicDescription" class="text-xs text-slate-500 mt-1 line-clamp-1">{{ group.topicDescription }}</p>
+                  </div>
+                  <p *ngIf="!group.topicTitle || group.status === 'draft'" class="italic text-slate-400">Sinh viên chưa cập nhật thông tin...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Members -->
+            <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100">
+              <div class="flex -space-x-2">
+                <div *ngFor="let member of group.members"
+                     class="h-9 w-9 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-600"
+                     [title]="member.name">
+                  {{ memberInitial(member) }}
+                </div>
+              </div>
+              <span class="text-sm font-medium text-slate-500 pl-2">{{ group.members.length }} thành viên</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loadingData && !filteredGroups.length" class="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+          <div class="w-16 h-16 bg-slate-100 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <lucide-icon [img]="icons.inbox" class="w-7 h-7 text-slate-400"></lucide-icon>
+          </div>
+          <p class="text-slate-500 font-bold text-sm mb-1">Không có đề tài nào</p>
+          <p class="text-xs text-slate-400">Hiện chưa có nhóm nào gửi đề tài.</p>
+        </div>
+
+        <!-- Pagination -->
+        <div *ngIf="!loadingData && filteredGroups.length" class="flex flex-col sm:flex-row items-center justify-between mt-8 pt-4 gap-4">
+          <p class="text-sm text-slate-500">Hiển thị <span class="font-bold text-slate-700">1-{{ filteredGroups.length }}</span> / <span class="font-bold text-slate-700">{{ groups.length }}</span> nhóm</p>
+          <div class="flex items-center gap-1.5">
+            <button disabled class="p-2 rounded-lg border border-slate-200 text-slate-400 disabled:opacity-50">
+              <lucide-icon [img]="icons.chevronLeft" class="w-4 h-4"></lucide-icon>
+            </button>
+            <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm shadow-sm">1</button>
+            <button disabled class="p-2 rounded-lg border border-slate-200 text-slate-400 disabled:opacity-50">
+              <lucide-icon [img]="icons.chevronRight" class="w-4 h-4"></lucide-icon>
+            </button>
+          </div>
+        </div>
+
       </div>
     </main>
+  </div>
+</div>
+
+<!-- ============================================= -->
+<!-- DETAIL MODAL (Matching mockup's modal design) -->
+<!-- ============================================= -->
+<div *ngIf="detailModalOpen && selectedGroup"
+     class="fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="closeDetailModal()"></div>
+
+  <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Modal header -->
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+      <div>
+        <h3 class="text-xl font-bold text-slate-800">Chi tiết {{ selectedGroup.teamName }}</h3>
+        <p class="text-sm text-slate-500 mt-1">Quản lý thành viên &amp; Nội dung đề tài</p>
+      </div>
+      <button (click)="closeDetailModal()" class="p-2 hover:bg-slate-200 rounded-full transition text-slate-500">
+        <lucide-icon [img]="icons.x" class="w-5 h-5"></lucide-icon>
+      </button>
+    </div>
+
+    <!-- Modal body -->
+    <div class="p-6 overflow-y-auto space-y-8">
+      <!-- Topic content -->
+      <div>
+        <h4 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <lucide-icon [img]="icons.fileText" class="w-5 h-5 text-blue-600"></lucide-icon> Nội dung Đề tài
+        </h4>
+        <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+          <div *ngIf="selectedGroup.topicTitle && selectedGroup.status !== 'draft'" class="space-y-4">
+            <div>
+              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Tên Tiếng Việt:</span>
+              <p class="font-bold text-slate-800 text-base">{{ selectedGroup.topicTitle }}</p>
+            </div>
+            <div *ngIf="selectedGroup.topicDescription">
+              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mô tả &amp; Công nghệ:</span>
+              <div class="bg-white p-4 rounded-xl border border-slate-200 text-sm text-slate-700 leading-relaxed">{{ selectedGroup.topicDescription }}</div>
+            </div>
+          </div>
+          <div *ngIf="!selectedGroup.topicTitle || selectedGroup.status === 'draft'"
+               class="p-4 bg-white rounded-xl border border-blue-100 text-center flex flex-col items-center justify-center text-slate-400">
+            <lucide-icon [img]="icons.fileText" class="w-8 h-8 mb-2 opacity-50"></lucide-icon>
+            <p class="text-sm font-medium">Sinh viên chưa cập nhật đề tài</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Members table -->
+      <div>
+        <h4 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <lucide-icon [img]="icons.users" class="w-5 h-5 text-blue-600"></lucide-icon> Thành viên &amp; Phân công
+        </h4>
+        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-4">Họ và tên</th>
+                <th class="p-4">MSSV</th>
+                <th class="p-4 text-center">Đại diện nhóm</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngFor="let member of selectedGroup.members" class="hover:bg-slate-50 transition">
+                <td class="p-4 font-bold text-slate-700">{{ member.name }}</td>
+                <td class="p-4 text-slate-500 font-mono text-sm">{{ member.code }}</td>
+                <td class="p-4 text-center">
+                  <input type="radio" name="group-leader"
+                         [checked]="member.leader"
+                         [disabled]="selectedGroup.status === 'approved'"
+                         class="w-4 h-4 text-blue-600 cursor-pointer" />
+                </td>
+              </tr>
+              <tr *ngIf="!selectedGroup.members.length">
+                <td colspan="3" class="p-6 text-center text-slate-400 text-sm">Chưa có thông tin thành viên.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal footer (actions) -->
+    <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+      <ng-container *ngIf="selectedGroup.status === 'pending' || selectedGroup.status === 'rejected'">
+        <button (click)="openRejectModal()"
+                [disabled]="processingAction"
+                class="px-5 py-2.5 text-red-600 font-bold text-sm border border-red-200 rounded-xl hover:bg-red-50 transition disabled:opacity-50">
+          Yêu cầu sửa lại
+        </button>
+        <button (click)="approveTopic()"
+                [disabled]="processingAction"
+                class="px-6 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-md transition flex items-center gap-2 disabled:opacity-50">
+          <lucide-icon *ngIf="processingAction" [img]="icons.loader" class="w-4 h-4 animate-spin"></lucide-icon>
+          <lucide-icon *ngIf="!processingAction" [img]="icons.circleCheck" class="w-4 h-4"></lucide-icon>
+          Phê duyệt đề tài
+        </button>
+      </ng-container>
+      <ng-container *ngIf="selectedGroup.status === 'approved'">
+        <span class="px-6 py-2.5 bg-green-50 text-green-700 font-bold text-sm rounded-xl border border-green-200 flex items-center gap-2 mr-auto">
+          <lucide-icon [img]="icons.circleCheck" class="w-4 h-4"></lucide-icon> Đề tài đã được duyệt
+        </span>
+        <button (click)="closeDetailModal()" class="px-6 py-2.5 bg-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-300 transition">Đóng</button>
+      </ng-container>
+      <ng-container *ngIf="selectedGroup.status === 'draft'">
+        <button (click)="closeDetailModal()" class="px-6 py-2.5 bg-slate-200 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-300 transition">Đóng</button>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================= -->
+<!-- REJECT MODAL (Matching mockup's reject modal) -->
+<!-- ============================================= -->
+<div *ngIf="rejectModalOpen"
+     class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center">
+  <div class="bg-white rounded-2xl w-[400px] p-6 shadow-2xl" (click)="$event.stopPropagation()">
+    <h3 class="font-bold text-xl text-slate-800 mb-2 flex items-center gap-2">
+      <lucide-icon [img]="icons.circleAlert" class="w-5 h-5 text-red-500"></lucide-icon> Yêu cầu chỉnh sửa
+    </h3>
+    <p class="text-sm text-slate-500 mb-4">Nhập lý do hoặc góp ý để sinh viên hoàn thiện lại đề tài.</p>
+    <textarea rows="4"
+              [(ngModel)]="rejectReason"
+              placeholder="Ví dụ: Cần làm rõ phạm vi công nghệ backend..."
+              class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-red-500 outline-none resize-none font-medium"></textarea>
+    <div class="flex justify-end gap-2 mt-5">
+      <button (click)="closeRejectModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition">Hủy</button>
+      <button (click)="confirmReject()"
+              [disabled]="!rejectReason.trim() || processingAction"
+              class="px-5 py-2.5 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed">
+        <lucide-icon *ngIf="processingAction" [img]="icons.loader" class="w-4 h-4 inline mr-1 animate-spin"></lucide-icon>
+        Gửi phản hồi
+      </button>
+    </div>
   </div>
 </div>

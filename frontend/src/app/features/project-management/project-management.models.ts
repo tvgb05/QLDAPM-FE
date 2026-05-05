@@ -84,6 +84,7 @@ export interface ProjectTopicResponse {
   description?: string | null;
   status: number;
   approvedBy?: string | null;
+  createdDate?: string | null;
 }
 
 export interface ProgressReportAttachmentRequest {
@@ -123,12 +124,29 @@ export interface FinalSubmissionResponse {
   attachments?: ProgressReportAttachmentRequest[] | null;
 }
 
+export interface TeacherAssignmentCreateRequest {
+  projectTeamId: string;
+  lecturerId: string;
+  role: number;
+}
+
+export interface TeacherAssignmentResponse {
+  id: string;
+  projectTeamId: string;
+  lecturerId: string;
+  role: number;
+}
+
 export type ProjectPeriodResponsePagedApiResponse = ApiResponse<PagedResult<ProjectPeriodResponse>>;
 export type SemesterListApiResponse = ApiResponse<SemesterPublicResponse[]>;
 export type StudentResponsePagedApiResponse = ApiResponse<PagedResult<StudentResponse>>;
 export type LecturerResponsePagedApiResponse = ApiResponse<PagedResult<LecturerResponse>>;
 export type ProjectTeamResponseApiResponse = ApiResponse<ProjectTeamResponse>;
+export type ProjectTeamResponsePagedApiResponse = ApiResponse<PagedResult<ProjectTeamResponse>>;
 export type ProjectTopicResponseApiResponse = ApiResponse<ProjectTopicResponse>;
+export type ProjectTopicResponsePagedApiResponse = ApiResponse<PagedResult<ProjectTopicResponse>>;
+export type ProjectTopicListApiResponse = ApiResponse<ProjectTopicResponse[]>;
+export type TeacherAssignmentListApiResponse = ApiResponse<TeacherAssignmentResponse[]>;
 export type ProgressReportResponseApiResponse = ApiResponse<ProgressReportResponse>;
 export type ProgressReportResponsePagedApiResponse = ApiResponse<PagedResult<ProgressReportResponse>>;
 export type FinalSubmissionResponseApiResponse = ApiResponse<FinalSubmissionResponse>;
