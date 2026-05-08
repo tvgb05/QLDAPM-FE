@@ -87,21 +87,30 @@ export class LecturerSelectionComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // 1. Lấy vai trò hiện tại
     this.role = this.authService.getCurrentRole();
+    
+    // 2. Tải lộ trình chung
     this.loadTimeline();
 
+    // 3. Cập nhật thông tin user
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
       this.currentUserName =
         currentUser.fullName?.trim() || currentUser.userName?.trim() || this.currentUserName;
     }
 
-    if (this.role === 'student') {
-      this.loadStudentData();
-      return;
+    // 4. Thiết lập tab mặc định cho GV/PĐT
+    if (this.role === 'lecturer' || this.role === 'pdt') {
+      this.activeTab = 'pending';
     }
 
-    this.loadLecturerData();
+    // 5. Kích hoạt load data tùy theo role
+    if (this.role === 'student') {
+      this.loadStudentData();
+    } else {
+      this.loadLecturerData();
+    }
   }
 
   switchRole(_role: AppRole): void {
@@ -216,7 +225,10 @@ export class LecturerSelectionComponent implements OnInit {
           this.registrationStatus = 0; // Pending
           this.registeredLecturerId = item.id;
           this.registrationRejectReason = null;
-          this.setRegisteredLecturer(item.id);
+          
+          // Tải lại toàn bộ context để đồng bộ UI
+          this.loadStudentData();
+          
           this.addNotification(`Đăng ký thành công GVHD <b>${item.lecturer}</b>. Đang chờ phê duyệt.`);
           this.cdr.detectChanges();
         },
@@ -243,7 +255,10 @@ export class LecturerSelectionComponent implements OnInit {
           this.registeredLecturerId = null;
           this.existingRegistrationId = null;
           this.approvedLecturerName = null;
-          this.setRegisteredLecturer('');
+          
+          // Tải lại toàn bộ context để đồng bộ UI
+          this.loadStudentData();
+          
           this.addNotification('Đã hủy đăng ký GVHD thành công.');
           this.cdr.detectChanges();
         },
@@ -257,6 +272,7 @@ export class LecturerSelectionComponent implements OnInit {
 
   switchLecturerTab(tab: SelectionTab): void {
     this.activeTab = tab;
+    this.cdr.detectChanges();
   }
 
   approveAll(): void {
@@ -314,6 +330,9 @@ export class LecturerSelectionComponent implements OnInit {
           this.pendingGroups = this.pendingGroups.filter((item) => item !== group);
           this.acceptedGroups = [...this.acceptedGroups, group];
           this.addNotification(`Đã phê duyệt đăng ký GVHD của <b>${group.name}</b>.`);
+          
+          // Tải lại dữ liệu để đảm bảo đồng bộ
+          this.loadLecturerData();
         },
         error: (error: { message?: string; error?: { message?: string | null } }) => {
           this.addNotification(
@@ -350,6 +369,9 @@ export class LecturerSelectionComponent implements OnInit {
           group.decision = 'rejected';
           this.pendingGroups = this.pendingGroups.filter((item) => item !== group);
           this.addNotification(`Đã từ chối đăng ký GVHD của <b>${group.name}</b>.`);
+
+          // Tải lại dữ liệu để đảm bảo đồng bộ
+          this.loadLecturerData();
         },
         error: (error: { message?: string; error?: { message?: string | null } }) => {
           this.addNotification(
@@ -412,15 +434,24 @@ export class LecturerSelectionComponent implements OnInit {
 
   private loadLecturerData(): void {
     this.loadingLecturerData = true;
+    this.cdr.detectChanges(); // Force show loading spinner
+
     this.lecturerSelectionService
       .loadLecturerContext(this.authService.getCurrentUser())
-      .pipe(finalize(() => (this.loadingLecturerData = false)))
+      .pipe(
+        finalize(() => {
+          this.loadingLecturerData = false;
+          this.cdr.detectChanges();
+        })
+      )
       .subscribe({
         next: (result) => {
           this.timeline = result.timeline;
-          this.pendingGroups = result.pendingGroups;
-          this.acceptedGroups = result.acceptedGroups;
+          this.pendingGroups = result.pendingGroups || [];
+          this.acceptedGroups = result.acceptedGroups || [];
           this.currentLecturerId = result.currentLecturerId;
+          
+          // Đảm bảo UI được cập nhật sau khi có dữ liệu
           this.cdr.detectChanges();
         },
         error: (error: { message?: string; error?: { message?: string | null } }) => {
@@ -442,12 +473,19 @@ export class LecturerSelectionComponent implements OnInit {
     });
   }
 
-  private setRegisteredLecturer(lecturerId: string): void {
-    this.studentRegistrations = this.studentRegistrations.map((item) => ({
-      ...item,
-      registered: item.id === lecturerId,
-      status: item.id === lecturerId ? this.registrationStatus : null
-    }));
+  private setRegisteredLecturer(lecturerId: string | null): void {
+    this.studentRegistrations = this.studentRegistrations.map((item) => {
+      const isTargetLecturer = item.id === lecturerId;
+      // Chỉ đánh dấu registered (để hiện nút Hủy) nếu status là Pending (0) hoặc Approved (1)
+      // Nếu đã bị Reject (2), nút phải hiện là "Đăng ký"
+      const isRegistered = isTargetLecturer && (this.registrationStatus === 0 || this.registrationStatus === 1);
+      
+      return {
+        ...item,
+        registered: isRegistered,
+        status: isTargetLecturer ? this.registrationStatus : null
+      };
+    });
     this.cdr.detectChanges();
   }
 
