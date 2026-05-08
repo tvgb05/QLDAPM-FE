@@ -33,16 +33,104 @@
               </div>
             </div>
 
-            <div class="relative w-full md:w-80 group">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <lucide-icon [img]="icons.search" class="w-4 h-4"></lucide-icon>
+            <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+              <!-- Major Filter Dropdown -->
+              <div class="relative w-full md:w-64 group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <lucide-icon [img]="icons.layers" class="w-4 h-4"></lucide-icon>
+                </div>
+                <select
+                  [ngModel]="filterMajorId"
+                  (ngModelChange)="onMajorFilterChange($event)"
+                  class="block w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none cursor-pointer w-full"
+                >
+                  <option [value]="null">Tất cả chuyên ngành</option>
+                  <option *ngFor="let major of majors" [value]="major.id">
+                    {{ major.majorName }}
+                  </option>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                  <lucide-icon [img]="icons.chevronDown" class="w-4 h-4"></lucide-icon>
+                </div>
               </div>
-              <input
-                type="text"
-                [(ngModel)]="searchTerm"
-                placeholder="Tìm giảng viên..."
-                class="block w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-              />
+
+              <!-- Search Bar -->
+              <div class="relative w-full md:w-80 group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <lucide-icon [img]="icons.search" class="w-4 h-4"></lucide-icon>
+                </div>
+                <input
+                  type="text"
+                  [(ngModel)]="searchTerm"
+                  placeholder="Tìm giảng viên..."
+                  class="block w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Banner -->
+          <div *ngIf="showStatusBanner" class="mb-8">
+            <div class="rounded-2xl border p-6 shadow-sm" [ngClass]="{
+              'bg-amber-50/50 border-amber-200': registrationStatus === 0,
+              'bg-green-50/50 border-green-200': registrationStatus === 1,
+              'bg-red-50/50 border-red-200': registrationStatus === 2
+            }">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" [ngClass]="{
+                  'bg-amber-100': registrationStatus === 0,
+                  'bg-green-100': registrationStatus === 1,
+                  'bg-red-100': registrationStatus === 2
+                }">
+                  <lucide-icon [img]="registrationStatus === 1 ? icons.checkCheck : registrationStatus === 2 ? icons.x : icons.clock3" 
+                    class="w-6 h-6" [ngClass]="statusIconClass"></lucide-icon>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-1">
+                    <h3 class="text-lg font-bold" [ngClass]="{
+                      'text-amber-800': registrationStatus === 0,
+                      'text-green-800': registrationStatus === 1,
+                      'text-red-800': registrationStatus === 2
+                    }">Trạng thái đăng ký GVHD</h3>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold" [ngClass]="statusClass">{{ statusLabel }}</span>
+                  </div>
+
+                  <!-- Pending -->
+                  <div *ngIf="registrationStatus === 0">
+                    <p class="text-amber-700 text-sm mb-3">
+                      Bạn đã đăng ký GVHD thành công. Vui lòng chờ phê duyệt từ Phòng Đào tạo.
+                    </p>
+                    <button
+                      (click)="cancelRegistration()"
+                      [disabled]="savingRegistrationId"
+                      class="px-3 py-1.5 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
+                    >
+                      <lucide-icon [img]="icons.x" class="w-3.5 h-3.5"></lucide-icon>
+                      Hủy đăng ký này
+                    </button>
+                  </div>
+
+                  <!-- Approved -->
+                  <div *ngIf="registrationStatus === 1">
+                    <p class="text-green-700 text-sm">
+                      Đăng ký GVHD của bạn đã được phê duyệt.
+                    </p>
+                    <p *ngIf="approvedLecturerName" class="text-green-800 font-bold text-sm mt-1">
+                      GVHD: {{ approvedLecturerName }}
+                    </p>
+                  </div>
+
+                  <!-- Rejected -->
+                  <div *ngIf="registrationStatus === 2">
+                    <p class="text-red-700 text-sm">
+                      Đăng ký GVHD của bạn đã bị từ chối. Bạn có thể đăng ký lại giảng viên khác bên dưới.
+                    </p>
+                    <p *ngIf="registrationRejectReason" class="text-red-600 text-xs mt-2 bg-red-100 px-3 py-2 rounded-lg">
+                      <strong>Lý do:</strong> {{ registrationRejectReason }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -50,18 +138,52 @@
              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!loadingStudentData">
-            <app-lecturer-registration-card
-              *ngFor="let item of filteredRegistrations; trackBy: trackRegistration"
-              [item]="item"
-              [saving]="savingRegistrationId === item.id"
-              (register)="toggleRegister(item)"
-            />
+          <!-- Lecturer Cards -->
+          <div *ngIf="!loadingStudentData">
+            <h3 *ngIf="registrationStatus === 2" class="text-lg font-bold text-slate-700 mb-4">
+              Chọn giảng viên hướng dẫn mới
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <app-lecturer-registration-card
+                *ngFor="let item of filteredRegistrations; trackBy: trackRegistration"
+                [item]="item"
+                [saving]="savingRegistrationId === item.id"
+                (register)="toggleRegister(item)"
+              />
+            </div>
+          </div>
+
+          <!-- Blocked State: No Major Selected (Only show if we really want to block, but user wants to allow other majors) -->
+          <!-- We'll hide this for now as per user request to allow choosing other majors -->
+          <div *ngIf="false && !loadingStudentData && !selectedMajorId" class="fade-in">
+            <div class="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center shadow-sm">
+              <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <lucide-icon [img]="icons.lock" class="w-10 h-10 text-amber-600"></lucide-icon>
+              </div>
+              <h3 class="text-xl font-bold text-amber-900 mb-2">Yêu cầu hoàn thành Giai đoạn 1</h3>
+              <p class="text-amber-700 max-w-md mx-auto mb-8">
+                Bạn cần đăng ký nguyện vọng chuyên ngành và được phê duyệt trước khi có thể đăng ký giáo viên hướng dẫn.
+              </p>
+              <a href="/dashboard" class="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors shadow-lg shadow-amber-200">
+                Quay lại Dashboard
+                <lucide-icon [img]="icons.arrowRight" class="w-4 h-4"></lucide-icon>
+              </a>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!loadingStudentData && filteredRegistrations.length === 0"
+            class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <lucide-icon [img]="icons.inbox" class="w-8 h-8 text-slate-300"></lucide-icon>
+            </div>
+            <p class="text-slate-500 font-medium">Không tìm thấy giảng viên nào phù hợp.</p>
+            <p class="text-slate-400 text-sm">Vui lòng thử lại với từ khóa khác hoặc liên hệ Admin.</p>
           </div>
         </div>
 
-        <!-- Lecturer View -->
-        <div *ngIf="role === 'lecturer'" class="fade-in">
+        <!-- Lecturer / Admin View -->
+        <div *ngIf="role === 'lecturer' || role === 'pdt'" class="fade-in">
           <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
             <div>
               <h2 class="text-2xl font-bold text-slate-800 mb-1">{{ pageTitle }}</h2>
@@ -82,13 +204,17 @@
                 [class]="activeTab === 'accepted' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'"
                 class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
               >
-                Đã nhận
+                Đã duyệt
                 <span *ngIf="acceptedCount > 0" class="px-1.5 py-0.5 bg-white/20 rounded text-[10px]">{{ acceptedCount }}</span>
               </button>
             </div>
           </div>
 
-          <div *ngIf="activeTab === 'pending'">
+          <div *ngIf="loadingLecturerData" class="flex items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+
+          <div *ngIf="!loadingLecturerData && activeTab === 'pending'">
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider">Danh sách yêu cầu ({{ pendingGroups.length }})</h3>
               <button 
@@ -118,8 +244,8 @@
             </div>
           </div>
 
-          <div *ngIf="activeTab === 'accepted'" class="fade-in">
-            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">Sinh viên đã nhận ({{ acceptedGroups.length }})</h3>
+          <div *ngIf="!loadingLecturerData && activeTab === 'accepted'" class="fade-in">
+            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">Sinh viên đã duyệt ({{ acceptedGroups.length }})</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                <app-lecturer-request-card
                 *ngFor="let group of acceptedGroups; trackBy: trackGroup"
@@ -135,5 +261,56 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Reject Modal -->
+  <div *ngIf="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 animate-in fade-in">
+      <h3 class="text-lg font-bold text-slate-800 mb-4">Từ chối đăng ký GVHD</h3>
+      <p class="text-sm text-slate-500 mb-4">Nhập lý do từ chối (không bắt buộc):</p>
+      <textarea
+        [(ngModel)]="rejectReasonInput"
+        class="w-full h-24 p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none resize-none"
+        placeholder="Ví dụ: Giảng viên đã quá tải số lượng sinh viên..."
+      ></textarea>
+      <div class="flex justify-end gap-3 mt-4">
+        <button
+          (click)="cancelReject()"
+          class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
+        >Hủy</button>
+        <button
+          (click)="confirmReject()"
+          class="px-4 py-2 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 transition shadow-sm"
+        >Xác nhận từ chối</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approve Modal -->
+  <div *ngIf="showApproveModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 animate-in fade-in">
+      <h3 class="text-lg font-bold text-slate-800 mb-4">Phê duyệt đăng ký GVHD</h3>
+      <div *ngIf="approveGroup" class="mb-4">
+        <p class="text-sm text-slate-600">
+          Sinh viên: <strong>{{ approveGroup.name }}</strong>
+        </p>
+        <p class="text-sm text-slate-600" *ngIf="approveGroup.choices?.length">
+          GVHD được chọn: <strong>{{ approveGroup.choices![0].lecturerName || 'Chưa rõ' }}</strong>
+        </p>
+        <p class="text-sm text-slate-500 mt-2">
+          Xác nhận phê duyệt đăng ký GVHD cho sinh viên này?
+        </p>
+      </div>
+      <div class="flex justify-end gap-3 mt-4">
+        <button
+          (click)="cancelApprove()"
+          class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
+        >Hủy</button>
+        <button
+          (click)="confirmApprove()"
+          class="px-4 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
+        >Xác nhận duyệt</button>
+      </div>
+    </div>
   </div>
 </div>
