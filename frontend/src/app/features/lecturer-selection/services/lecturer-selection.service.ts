@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { forkJoin, map, Observable, of } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 
 import { AuthResponse } from '../../../shared/models/auth-response.model';
 import { ApiResponse } from '../../../shared/models/api-response.model';
@@ -16,6 +16,7 @@ import {
   ProjectPeriodResponsePagedApiResponse,
   RegistrationCreateRequest,
   RegistrationItem,
+  RegistrationListApiResponse,
   RegistrationResponse,
   RegistrationResponseApiResponse,
   RegistrationResponsePagedApiResponse,
@@ -24,6 +25,9 @@ import {
   SemesterPublicResponse,
   StudentResponse,
   StudentResponsePagedApiResponse,
+  SupervisorApproveRequest,
+  SupervisorRegistrationCreateRequest,
+  SupervisorRejectRequest,
 } from '../lecturer-selection.models';
 
 @Injectable({
@@ -54,6 +58,11 @@ export class LecturerSelectionService {
     existingRegistrationId: string | null;
     currentMajorName: string | null;
     currentMajorTag: string | null;
+    registrationStatus: number | null;
+    registrationRejectReason: string | null;
+    registeredLecturerId: string | null;
+    approvedLecturerName: string | null;
+    majors: MajorResponse[];
   }> {
     if (!currentUser) {
       return of({
@@ -65,77 +74,121 @@ export class LecturerSelectionService {
         existingRegistrationId: null,
         currentMajorName: null,
         currentMajorTag: null,
+        registrationStatus: null,
+        registrationRejectReason: null,
+        registeredLecturerId: null,
+        approvedLecturerName: null,
+        majors: [],
       });
     }
 
+    return this.apiService.get<StudentResponsePagedApiResponse>('/AppStudent/paging?PageIndex=1&PageSize=200').pipe(
+      catchError(() => of({ data: { results: [] } })),
+      switchMap((studentsRes: any) => {
+        const student = (studentsRes.data?.results ?? []).find((s: any) => s.appUserId === currentUser.id) ?? null;
+        
+        return forkJoin({
+          currentStudent: of(student),
+          myRegistrationsResponse: this.apiService.get<any>('/supervisor-registrations/my-registration').pipe(
+            catchError(() => of(null))
+          ),
+          facultiesResponse: this.apiService.get<any>('/AppFaculty/paging?PageIndex=1&PageSize=100').pipe(
+            catchError(() => of({ data: { results: [] } }))
+          ),
+          majorsResponse: this.apiService.get<any>('/majors/paging?PageIndex=1&PageSize=100').pipe(
+            catchError(() => of({ data: { results: [] } }))
+          ),
+          periodsResponse: this.apiService.get<any>('/ProjectPeriod/paging?PageIndex=1&PageSize=20').pipe(
+            catchError(() => of({ data: { results: [] } }))
+          ),
+          semestersResponse: this.apiService.get<any>('/Semester/public-data').pipe(
+            catchError(() => of({ data: [] }))
+          )
+        });
+      }),
+      switchMap((data: any) => {
+        const myRegData = data.myRegistrationsResponse?.data ?? data.myRegistrationsResponse;
+        const myRegistrations = Array.isArray(myRegData) ? myRegData : (myRegData ? [myRegData] : []);
+        const currentRegistration = myRegistrations.length > 0 ? myRegistrations[0] : null;
+        const currentStudent = data.currentStudent;
+        
+        const majorId = currentRegistration?.selectedMajorId ?? currentRegistration?.majorId ?? currentStudent?.majorId ?? null;
+        const lecturerApi = majorId 
+          ? `/AppLecturer/paging?PageIndex=1&PageSize=200&MajorId=${majorId}`
+          : '/AppLecturer/paging?PageIndex=1&PageSize=200';
+
+        return this.apiService.get<LecturerResponsePagedApiResponse>(lecturerApi).pipe(
+          catchError(() => of({ data: { results: [] } })),
+          map((lecturersResponse: any) => ({
+            ...data,
+            myRegistrations,
+            currentRegistration,
+            lecturersResponse
+          }))
+        );
+      }),
+      map((data: any) => {
+        const { currentStudent, myRegistrations, currentRegistration, lecturersResponse, facultiesResponse, majorsResponse, periodsResponse, semestersResponse } = data;
+        
+        const lecturers = (lecturersResponse?.data?.results ?? []).filter((l: LecturerResponse) => !l.isDelete);
+        const faculties = facultiesResponse?.data?.results ?? [];
+        const majors = majorsResponse?.data?.results ?? [];
+        const periods = (periodsResponse?.data?.results ?? []) as ProjectPeriodResponse[];
+        const semesters = semestersResponse?.data ?? [];
+
+        const stageTwoPeriod = periods.find((period) => period.stage === 2) ?? null;
+        const majorId = currentRegistration?.selectedMajorId ?? currentRegistration?.majorId ?? currentStudent?.majorId ?? null;
+        const selectedMajor = (majorId != null && Array.isArray(majors)) ? majors.find((major: MajorResponse) => major.id === majorId) ?? null : null;
+
+        const registeredChoice = currentRegistration?.choices?.[0] ?? null;
+        const registeredLecturerId = registeredChoice?.lecturerId ?? null;
+
+        const registrationItems = this.mapLecturerRegistrations(
+          lecturers, 
+          faculties, 
+          registeredLecturerId, 
+          currentRegistration?.status ?? null
+        );
+
+        return {
+          timeline: this.mapTimeline(periods, semesters),
+          registrations: registrationItems,
+          studentId: currentStudent?.id ?? null,
+          projectPeriodId: stageTwoPeriod?.id ?? null,
+          selectedMajorId: majorId,
+          existingRegistrationId: currentRegistration?.id ?? null,
+          currentMajorName: selectedMajor?.majorName ?? null,
+          currentMajorTag: selectedMajor ? this.toMajorTag(selectedMajor.majorName) : null,
+          registrationStatus: currentRegistration?.status ?? null,
+          registrationRejectReason: currentRegistration?.rejectReason ?? null,
+          registeredLecturerId,
+          approvedLecturerName: currentRegistration?.approvedLecturerName ?? null,
+          majors,
+        };
+      })
+    );
+  }
+
+  getLecturersByMajor(majorId: number | null): Observable<{
+    registrations: RegistrationItem[];
+  }> {
+    const lecturerApi = majorId 
+      ? `/AppLecturer/paging?PageIndex=1&PageSize=200&MajorId=${majorId}`
+      : '/AppLecturer/paging?PageIndex=1&PageSize=200';
+
     return forkJoin({
-      lecturersResponse: this.apiService.get<LecturerResponsePagedApiResponse>(
-        '/AppLecturer/paging?PageIndex=1&PageSize=200'
-      ),
+      lecturersResponse: this.apiService.get<LecturerResponsePagedApiResponse>(lecturerApi),
       facultiesResponse: this.apiService.get<ApiResponse<{ results?: FacultyResponse[] | null }>>(
         '/AppFaculty/paging?PageIndex=1&PageSize=100'
-      ),
-      majorsResponse: this.apiService.get<MajorResponsePagedApiResponse>(
-        '/AppMajor/paging?PageIndex=1&PageSize=100'
-      ),
-      studentsResponse: this.apiService.get<StudentResponsePagedApiResponse>(
-        '/AppStudent/paging?PageIndex=1&PageSize=200'
-      ),
-      registrationsResponse: this.apiService.get<RegistrationResponsePagedApiResponse>(
-        '/StudentProjectRegistration/paging?PageIndex=1&PageSize=200'
-      ),
-      periodsResponse: this.apiService.get<ProjectPeriodResponsePagedApiResponse>(
-        '/ProjectPeriod/paging?PageIndex=1&PageSize=20'
-      ),
-      semestersResponse: this.apiService.get<SemesterListApiResponse>('/Semester/public-data'),
+      ).pipe(catchError(() => of({ success: false, data: null, message: '', statusCode: 500 }))),
     }).pipe(
-      map(
-        ({
-          lecturersResponse,
-          facultiesResponse,
-          majorsResponse,
-          studentsResponse,
-          registrationsResponse,
-          periodsResponse,
-          semestersResponse,
-        }) => {
-          const lecturers = lecturersResponse.data?.results ?? [];
-          const faculties = facultiesResponse.data?.results ?? [];
-          const majors = majorsResponse.data?.results ?? [];
-          const students = studentsResponse.data?.results ?? [];
-          const registrations = registrationsResponse.data?.results ?? [];
-          const periods = periodsResponse.data?.results ?? [];
-          const semesters = semestersResponse.data ?? [];
-
-          const currentStudent =
-            students.find((student) => student.appUserId === currentUser.id) ?? null;
-          const stageTwoPeriod = periods.find((period) => period.stage === 2) ?? null;
-          const currentRegistration =
-            currentStudent && stageTwoPeriod
-              ? registrations.find(
-                  (registration) =>
-                    registration.studentId === currentStudent.id &&
-                    registration.projectPeriodId === stageTwoPeriod.id
-                ) ?? null
-              : null;
-
-          const selectedMajorId =
-            currentRegistration?.selectedMajorId ?? currentStudent?.majorId ?? null;
-          const selectedMajor =
-            selectedMajorId != null ? majors.find((major) => major.id === selectedMajorId) ?? null : null;
-
-          return {
-            timeline: this.mapTimeline(periods, semesters),
-            registrations: this.mapLecturerRegistrations(lecturers, faculties),
-            studentId: currentStudent?.id ?? null,
-            projectPeriodId: stageTwoPeriod?.id ?? null,
-            selectedMajorId,
-            existingRegistrationId: currentRegistration?.id ?? null,
-            currentMajorName: selectedMajor?.majorName ?? null,
-            currentMajorTag: selectedMajor ? this.toMajorTag(selectedMajor.majorName) : null,
-          };
-        }
-      )
+      map(({ lecturersResponse, facultiesResponse }) => {
+        const lecturers = (lecturersResponse?.data?.results ?? []).filter((l: LecturerResponse) => !l.isDelete);
+        const faculties = facultiesResponse?.data?.results ?? [];
+        return {
+          registrations: this.mapLecturerRegistrations(lecturers, faculties)
+        };
+      })
     );
   }
 
@@ -157,20 +210,21 @@ export class LecturerSelectionService {
     return forkJoin({
       lecturersResponse: this.apiService.get<LecturerResponsePagedApiResponse>(
         '/AppLecturer/paging?PageIndex=1&PageSize=200'
-      ),
+      ).pipe(catchError(() => of({ success: false, data: null, message: '', statusCode: 500 }))),
       studentsResponse: this.apiService.get<StudentResponsePagedApiResponse>(
         '/AppStudent/paging?PageIndex=1&PageSize=200'
-      ),
+      ).pipe(catchError(() => of({ success: false, data: null, message: '', statusCode: 500 }))),
       majorsResponse: this.apiService.get<MajorResponsePagedApiResponse>(
-        '/AppMajor/paging?PageIndex=1&PageSize=100'
-      ),
+        '/majors/paging?PageIndex=1&PageSize=100'
+      ).pipe(catchError(() => of({ success: false, data: null, message: '', statusCode: 500 }))),
       registrationsResponse: this.apiService.get<RegistrationResponsePagedApiResponse>(
-        '/StudentProjectRegistration/paging?PageIndex=1&PageSize=200'
-      ),
+        '/supervisor-registrations?PageIndex=1&PageSize=200'
+      ).pipe(catchError(() => of({ success: false, data: null, message: '', statusCode: 500 }))),
       periodsResponse: this.apiService.get<ProjectPeriodResponsePagedApiResponse>(
         '/ProjectPeriod/paging?PageIndex=1&PageSize=20'
-      ),
-      semestersResponse: this.apiService.get<SemesterListApiResponse>('/Semester/public-data'),
+      ).pipe(catchError(() => of({ success: false, data: null, message: '', statusCode: 500 }))),
+      semestersResponse: this.apiService.get<SemesterListApiResponse>('/Semester/public-data')
+        .pipe(catchError(() => of({ success: false, data: [], message: '', statusCode: 500 }))),
     }).pipe(
       map(
         ({
@@ -181,12 +235,12 @@ export class LecturerSelectionService {
           periodsResponse,
           semestersResponse,
         }) => {
-          const lecturers = lecturersResponse.data?.results ?? [];
-          const students = studentsResponse.data?.results ?? [];
-          const majors = majorsResponse.data?.results ?? [];
-          const registrations = registrationsResponse.data?.results ?? [];
-          const periods = periodsResponse.data?.results ?? [];
-          const semesters = semestersResponse.data ?? [];
+          const lecturers = (lecturersResponse?.data?.results ?? []).filter((l: LecturerResponse) => !l.isDelete);
+          const students = studentsResponse?.data?.results ?? [];
+          const majors = majorsResponse?.data?.results ?? [];
+          const registrations = registrationsResponse?.data?.results ?? [];
+          const periods = periodsResponse?.data?.results ?? [];
+          const semesters = semestersResponse?.data ?? [];
 
           const currentLecturer =
             lecturers.find((lecturer) => lecturer.appUserId === currentUser.id) ?? null;
@@ -195,15 +249,26 @@ export class LecturerSelectionService {
             ? registrations.filter((registration) => registration.projectPeriodId === stageTwoPeriod.id)
             : registrations;
 
+          const pendingRegs = stageTwoRegistrations.filter((r) => r.status === 0);
+          const approvedRegs = stageTwoRegistrations.filter((r) => r.status === 1);
+
           return {
             timeline: this.mapTimeline(periods, semesters),
-            pendingGroups: this.mapLecturerGroups(stageTwoRegistrations, students, majors),
-            acceptedGroups: [],
+            pendingGroups: this.mapLecturerGroups(pendingRegs, students, majors),
+            acceptedGroups: this.mapLecturerGroups(approvedRegs, students, majors).map((g) => ({
+              ...g,
+              decision: 'approved' as const,
+            })),
             currentLecturerId: currentLecturer?.id ?? null,
           };
         }
       )
     );
+  }
+
+  /** Use the new supervisor-registrations endpoint for phase 2 */
+  registerSupervisor(payload: SupervisorRegistrationCreateRequest): Observable<RegistrationResponseApiResponse> {
+    return this.apiService.post<RegistrationResponseApiResponse>('/supervisor-registrations', payload);
   }
 
   saveRegistration(payload: RegistrationCreateRequest): Observable<RegistrationResponseApiResponse> {
@@ -216,6 +281,30 @@ export class LecturerSelectionService {
   ): Observable<RegistrationResponseApiResponse> {
     return this.apiService.put<RegistrationResponseApiResponse>(
       `/StudentProjectRegistration/${registrationId}`,
+      payload
+    );
+  }
+
+  approveSupervisorRegistration(
+    registrationId: string,
+    payload: SupervisorApproveRequest
+  ): Observable<RegistrationResponseApiResponse> {
+    return this.apiService.put<RegistrationResponseApiResponse>(
+      `/supervisor-registrations/${registrationId}/approve`,
+      payload
+    );
+  }
+
+  cancelSupervisorRegistration(registrationId: string): Observable<ApiResponse<boolean>> {
+    return this.apiService.delete<ApiResponse<boolean>>(`/supervisor-registrations/${registrationId}`);
+  }
+
+  rejectSupervisorRegistration(
+    registrationId: string,
+    payload: SupervisorRejectRequest
+  ): Observable<RegistrationResponseApiResponse> {
+    return this.apiService.put<RegistrationResponseApiResponse>(
+      `/supervisor-registrations/${registrationId}/reject`,
       payload
     );
   }
@@ -237,15 +326,19 @@ export class LecturerSelectionService {
 
   private mapLecturerRegistrations(
     lecturers: LecturerResponse[],
-    faculties: FacultyResponse[]
+    faculties: FacultyResponse[] | null | undefined,
+    registeredLecturerId: string | null = null,
+    registrationStatus: number | null = null
   ): RegistrationItem[] {
-    const facultyMap = new Map(faculties.map((faculty) => [faculty.id, faculty.facultyName]));
+    const facultyMap = new Map((faculties ?? []).map((faculty) => [String(faculty.id), faculty.facultyName]));
 
     return lecturers.map((lecturer, index) => {
       const tone = this.getTone(index);
       const lecturerName = lecturer.fullName?.trim() || lecturer.teacherCode?.trim() || 'Chưa có tên';
       const facultyName =
-        (lecturer.facultyId != null ? facultyMap.get(lecturer.facultyId) : null) ?? 'Chưa có khoa';
+        (lecturer.facultyId != null ? facultyMap.get(String(lecturer.facultyId)) : null) ?? 'Chưa có khoa';
+
+      const isRegistered = registeredLecturerId === lecturer.id && registrationStatus !== 2;
 
       return {
         id: lecturer.id,
@@ -259,7 +352,8 @@ export class LecturerSelectionService {
         progressClass: 'bg-slate-300',
         tone,
         full: false,
-        registered: false,
+        registered: isRegistered,
+        status: isRegistered ? registrationStatus : null,
         showQuota: false,
       };
     });
@@ -268,10 +362,10 @@ export class LecturerSelectionService {
   private mapLecturerGroups(
     registrations: RegistrationResponse[],
     students: StudentResponse[],
-    majors: MajorResponse[]
+    majors: MajorResponse[] | null | undefined
   ): GroupItem[] {
     const studentMap = new Map(students.map((student) => [student.id, student]));
-    const majorMap = new Map(majors.map((major) => [major.id, major]));
+    const majorMap = new Map((majors ?? []).map((major) => [major.id, major]));
 
     return registrations.map((registration, index) => {
       const student = studentMap.get(registration.studentId) ?? null;
@@ -288,8 +382,9 @@ export class LecturerSelectionService {
         specialization: major?.majorName?.trim() || 'Chưa có chuyên ngành',
         initials: this.toInitials(studentName),
         tone: this.getTone(index),
-        decision: 'none',
+        decision: 'none' as const,
         backendStatus: registration.status,
+        choices: registration.choices ?? [],
       };
     });
   }

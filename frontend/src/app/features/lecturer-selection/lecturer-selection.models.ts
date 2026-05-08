@@ -5,6 +5,18 @@ export type SelectionTab = 'pending' | 'accepted';
 export type LecturerCardTone = 'blue' | 'purple' | 'slate';
 export type RequestDecision = 'none' | 'approved' | 'rejected';
 
+/** Status: 0 = Pending, 1 = Approved, 2 = Rejected */
+export type RegistrationStatus = 0 | 1 | 2;
+
+export interface RegistrationChoiceResponse {
+  id: string;
+  registrationId: string;
+  lecturerId: string;
+  lecturerName?: string | null;
+  priorityOrder: number;
+  status: number;
+}
+
 export interface RegistrationItem {
   id: string;
   initials: string;
@@ -18,6 +30,7 @@ export interface RegistrationItem {
   tone: LecturerCardTone;
   full: boolean;
   registered: boolean;
+  status?: number | null;
   showQuota?: boolean;
 }
 
@@ -30,6 +43,7 @@ export interface GroupItem {
   tone: LecturerCardTone;
   decision: RequestDecision;
   backendStatus?: number | null;
+  choices?: RegistrationChoiceResponse[] | null;
 }
 
 export interface PagedResult<T> {
@@ -50,6 +64,7 @@ export interface LecturerResponse {
   phoneNumber?: string | null;
   appUserId: string;
   facultyId?: number | null;
+  isDelete?: boolean;
 }
 
 export interface MajorResponse {
@@ -61,7 +76,8 @@ export interface MajorResponse {
 
 export interface FacultyResponse {
   id: number;
-  facultyName: string;
+  facultyCode?: string | null;
+  facultyName: string | null;
 }
 
 export interface StudentResponse {
@@ -113,13 +129,34 @@ export interface RegistrationUpdateRequest {
   rejectReason?: string | null;
 }
 
+export interface SupervisorRegistrationCreateRequest {
+  lecturerId: string;
+}
+
+export interface SupervisorApproveRequest {
+  approvedLecturerId: string;
+}
+
+export interface SupervisorRejectRequest {
+  rejectReason?: string | null;
+}
+
 export interface RegistrationResponse {
   id: string;
   studentId: string;
+  studentName?: string | null;
+  studentCode?: string | null;
   projectPeriodId: string;
   selectedMajorId: number;
+  majorId?: number;
+  selectedMajorName?: string | null;
   submittedAt?: string | null;
   status: number;
+  rejectReason?: string | null;
+  approvedLecturerId?: string | null;
+  approvedLecturerName?: string | null;
+  reviewedAt?: string | null;
+  choices?: RegistrationChoiceResponse[] | null;
 }
 
 export type LecturerResponsePagedApiResponse = ApiResponse<PagedResult<LecturerResponse>>;
@@ -128,4 +165,5 @@ export type StudentResponsePagedApiResponse = ApiResponse<PagedResult<StudentRes
 export type ProjectPeriodResponsePagedApiResponse = ApiResponse<PagedResult<ProjectPeriodResponse>>;
 export type RegistrationResponsePagedApiResponse = ApiResponse<PagedResult<RegistrationResponse>>;
 export type RegistrationResponseApiResponse = ApiResponse<RegistrationResponse>;
+export type RegistrationListApiResponse = ApiResponse<RegistrationResponse[]>;
 export type SemesterListApiResponse = ApiResponse<SemesterPublicResponse[]>;

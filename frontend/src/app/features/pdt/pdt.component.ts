@@ -10,6 +10,7 @@ import { PdtTimeTabComponent } from './components/pdt-time-tab.component';
 import { PdtTopicsTabComponent } from './components/pdt-topics-tab.component';
 import { PdtReportTabComponent } from './components/pdt-report-tab.component';
 import { MajorRegistrationsListComponent } from '../major-selection/components/major-registrations-list.component';
+import { SupervisorRegistrationsListComponent } from '../lecturer-selection/components/supervisor-registrations-list.component';
 
 @Component({
   selector: 'app-pdt',
@@ -23,6 +24,7 @@ import { MajorRegistrationsListComponent } from '../major-selection/components/m
     PdtTopicsTabComponent,
     PdtReportTabComponent,
     MajorRegistrationsListComponent,
+    SupervisorRegistrationsListComponent,
   ],
   templateUrl: './pdt.component.html',
 })

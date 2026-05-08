@@ -26,6 +26,7 @@ import {
   GraduationCap,
   Inbox,
   Info,
+  Layers,
   LayoutTemplate,
   LucideIconData,
   Loader,
@@ -97,6 +98,7 @@ export const APP_ICONS: Record<string, LucideIconData> = {
   fileText: FileText,
   uploadCloud: UploadCloud,
   inbox: Inbox,
+  layers: Layers,
 };
 
 export type AppIconKey = keyof typeof APP_ICONS;
