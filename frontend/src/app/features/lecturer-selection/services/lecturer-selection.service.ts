@@ -338,7 +338,7 @@ export class LecturerSelectionService {
       const facultyName =
         (lecturer.facultyId != null ? facultyMap.get(String(lecturer.facultyId)) : null) ?? 'Chưa có khoa';
 
-      const isRegistered = registeredLecturerId === lecturer.id && registrationStatus !== 2;
+      const isRegistered = registeredLecturerId === lecturer.id && (registrationStatus === 0 || registrationStatus === 1);
 
       return {
         id: lecturer.id,
