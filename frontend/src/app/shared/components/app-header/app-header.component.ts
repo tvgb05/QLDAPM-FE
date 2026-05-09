@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
 import { APP_ICONS } from '../../icons/app-icons';
@@ -11,7 +11,7 @@ import { TimeContextService } from '../../services/time-context.service';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, RouterModule],
   templateUrl: './app-header.component.html',
 })
 export class AppHeaderComponent {

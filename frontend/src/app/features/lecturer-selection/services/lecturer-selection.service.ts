@@ -108,8 +108,11 @@ export class LecturerSelectionService {
       }),
       switchMap((data: any) => {
         const myRegData = data.myRegistrationsResponse?.data ?? data.myRegistrationsResponse;
-        const myRegistrations = Array.isArray(myRegData) ? myRegData : (myRegData ? [myRegData] : []);
-        const currentRegistration = myRegistrations.length > 0 ? myRegistrations[0] : null;
+        const myRegistrations = (Array.isArray(myRegData) ? myRegData : (myRegData ? [myRegData] : [])) as RegistrationResponse[];
+        
+        // Ưu tiên lấy đăng ký Đã duyệt (status = 1), nếu không có thì lấy cái mới nhất (cuối danh sách)
+        const approvedRegistration = myRegistrations.find(r => r.status === 1);
+        const currentRegistration = approvedRegistration || (myRegistrations.length > 0 ? myRegistrations[myRegistrations.length - 1] : null);
         const currentStudent = data.currentStudent;
         
         const majorId = currentRegistration?.selectedMajorId ?? currentRegistration?.majorId ?? currentStudent?.majorId ?? null;

@@ -1,0 +1,184 @@
+<div class="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 overflow-x-hidden pb-12">
+  <app-header [userName]="currentUserName"></app-header>
+
+  <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-700">
+    <!-- Content Section -->
+    <div class="max-w-4xl mx-auto">
+      <!-- Notification Banner -->
+      <div *ngIf="notification.type" class="mb-6 animate-in slide-in-from-top duration-300">
+        <div [class]="notification.type === 'success' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'"
+             class="p-4 rounded-2xl border flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <lucide-angular [img]="notification.type === 'success' ? icons.check : icons.alertCircle" class="w-5 h-5"></lucide-angular>
+            <p class="font-medium">{{ notification.message }}</p>
+          </div>
+          <button (click)="notification.type = null" class="opacity-50 hover:opacity-100 transition-opacity">
+            <lucide-angular [img]="icons.x" class="w-4 h-4"></lucide-angular>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Loading State -->
+      <div *ngIf="loading" class="flex flex-col items-center justify-center py-20">
+        <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+        <p class="text-slate-500 font-medium">Đang tải dữ liệu nhóm...</p>
+      </div>
+
+      <div *ngIf="!loading" class="space-y-8">
+        
+        <!-- Case 1: Already has a team -->
+        <div *ngIf="myTeam" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-6 sm:p-8 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3 mb-1">
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider">
+                  {{ myTeam.teamCode || 'TEAM' }}
+                </span>
+                <h1 class="text-2xl font-bold text-slate-800">{{ myTeam.teamName || 'Nhóm của ' + currentUserName }}</h1>
+              </div>
+              <p class="text-slate-500 flex items-center gap-1.5">
+                <lucide-angular [img]="icons.user" class="w-4 h-4"></lucide-angular>
+                Giảng viên hướng dẫn: <span class="font-semibold text-slate-700">{{ myTeam.assignedLecturerName || approvedSupervisorName || 'Chưa có GVHD' }}</span>
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <button *ngIf="isLeader() && (myTeam.members?.length || 0) < (myTeam.maxMembers || 2)" (click)="openInviteModal()" 
+                class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md active:scale-95">
+                <lucide-angular [img]="icons.plus" class="w-4 h-4"></lucide-angular>
+                Mời thành viên
+              </button>
+              
+              <button *ngIf="!isLeader()" (click)="leaveTeam()" 
+                class="px-4 py-2 bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-100 rounded-xl font-medium transition-all">
+                Rời nhóm
+              </button>
+              
+              <button *ngIf="isLeader()" (click)="dissolveTeam()" [disabled]="saving"
+                class="px-4 py-2 bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-100 rounded-xl font-medium transition-all disabled:opacity-50">
+                Giải tán nhóm
+              </button>
+            </div>
+          </div>
+
+          <div class="p-6 sm:p-8">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Thành viên nhóm</h3>
+              <span class="text-sm font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+                {{ myTeam.members?.length || 0 }}/{{ myTeam.maxMembers || 2 }} thành viên
+              </span>
+            </div>
+            <div class="space-y-4">
+              <div *ngFor="let member of myTeam.members" class="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-100 hover:shadow-sm transition-all group">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-lg group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                    {{ (member.studentName || 'S').charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <p class="font-bold text-slate-800">{{ member.studentName || 'Sinh viên' }}</p>
+                      <span *ngIf="member.role === 1" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold uppercase">Trưởng nhóm</span>
+                    </div>
+                    <p class="text-sm text-slate-500">{{ member.studentCode || '---' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 text-sm">
+                  <span *ngIf="member.status === 0" class="px-3 py-1 rounded-full bg-slate-100 text-slate-500 font-medium italic">Đang chờ xác nhận...</span>
+                  <span *ngIf="member.status === 1" class="px-3 py-1 rounded-full bg-green-50 text-green-600 font-medium flex items-center gap-1.5">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    Đã tham gia
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Case 2: No team, but has pending invites -->
+        <div *ngIf="!myTeam && (pendingInvites?.length || 0) > 0" class="space-y-4">
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 px-1">
+            <lucide-angular [img]="icons.mail" class="w-5 h-5 text-blue-600"></lucide-angular>
+            Lời mời tham gia nhóm ({{ pendingInvites?.length || 0 }})
+          </h2>
+          <div *ngFor="let invite of pendingInvites" class="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xl">
+                {{ invite.teamName?.charAt(0) }}
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-slate-800">{{ invite.teamName }}</h3>
+                <p class="text-slate-500 text-sm">Mã nhóm: <span class="font-mono text-slate-700">{{ invite.teamCode }}</span></p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button (click)="respondToInvite(invite.projectTeamId, true)" [disabled]="saving"
+                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50">
+                Chấp nhận
+              </button>
+              <button (click)="respondToInvite(invite.projectTeamId, false)" [disabled]="saving"
+                class="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-50">
+                Từ chối
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Case 3: No team, can create -->
+        <div *ngIf="!myTeam" class="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center group hover:border-blue-300 transition-colors">
+          <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-blue-50 transition-all duration-500">
+            <lucide-angular [img]="icons.users" class="w-10 h-10 text-slate-300 group-hover:text-blue-500 transition-colors"></lucide-angular>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-800 mb-2">Bạn chưa có nhóm đồ án</h2>
+          <p class="text-slate-500 max-w-md mx-auto mb-8">
+            <span *ngIf="hasApprovedSupervisor">
+              Bạn đã có GVHD <b>{{ approvedSupervisorName }}</b>. Bạn có thể tự tạo nhóm và mời thêm thành viên cùng GVHD này.
+            </span>
+            <span *ngIf="!hasApprovedSupervisor" class="text-amber-600">
+              Bạn cần hoàn thành đăng ký GVHD và được phê duyệt trước khi tạo nhóm.
+            </span>
+          </p>
+          <button *ngIf="hasApprovedSupervisor" (click)="createTeam()" [disabled]="saving"
+            class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg transition-all shadow-lg shadow-blue-200 active:scale-95 disabled:opacity-50">
+            {{ saving ? 'Đang khởi tạo...' : 'Tạo nhóm ngay' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Invite Modal -->
+  <div *ngIf="showInviteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-slate-800">Mời thành viên</h3>
+        <button (click)="showInviteModal = false" class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+          <lucide-angular [img]="icons.x" class="w-5 h-5"></lucide-angular>
+        </button>
+      </div>
+      <div class="p-6">
+        <p class="text-sm text-slate-500 mb-6">Nhập mã số sinh viên của người bạn muốn mời. Sinh viên phải có cùng GVHD đã được phê duyệt.</p>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5">Mã số sinh viên</label>
+            <input type="text" [(ngModel)]="inviteStudentCode" placeholder="Ví dụ: 2012345" 
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium">
+          </div>
+          <div *ngIf="inviteError" class="p-3 bg-red-50 text-red-600 text-sm rounded-xl flex items-center gap-2 border border-red-100">
+            <lucide-angular [img]="icons.alertCircle" class="w-4 h-4"></lucide-angular>
+            {{ inviteError }}
+          </div>
+        </div>
+      </div>
+      <div class="p-6 bg-slate-50/50 flex gap-3">
+        <button (click)="showInviteModal = false" class="flex-1 px-4 py-3 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl font-bold transition-all">
+          Hủy bỏ
+        </button>
+        <button (click)="sendInvite()" [disabled]="saving || !inviteStudentCode"
+          class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50">
+          {{ saving ? 'Đang gửi...' : 'Gửi lời mời' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
