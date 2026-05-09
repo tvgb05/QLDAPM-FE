@@ -16,6 +16,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
+  {
+    path: 'team-management',
+    loadComponent: () =>
+      import('./features/team-management/team-management.component').then((m) => m.TeamManagementComponent),
+  },
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' },
 ];

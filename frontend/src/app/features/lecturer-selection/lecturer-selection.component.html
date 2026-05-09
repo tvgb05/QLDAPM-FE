@@ -115,9 +115,14 @@
                     <p class="text-green-700 text-sm">
                       Đăng ký GVHD của bạn đã được phê duyệt.
                     </p>
-                    <p *ngIf="approvedLecturerName" class="text-green-800 font-bold text-sm mt-1">
+                    <p *ngIf="approvedLecturerName" class="text-green-800 font-bold text-sm mt-1 mb-4">
                       GVHD: {{ approvedLecturerName }}
                     </p>
+                    <a routerLink="/team-management" 
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-700 transition-all shadow-sm active:scale-95">
+                      <lucide-icon [img]="icons.users" class="w-4 h-4"></lucide-icon>
+                      Quản lý Nhóm của bạn
+                    </a>
                   </div>
 
                   <!-- Rejected -->

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { finalize, map } from 'rxjs';
 
@@ -29,6 +30,7 @@ import { LecturerSelectionService } from './services/lecturer-selection.service'
     CommonModule,
     FormsModule,
     LucideAngularModule,
+    RouterModule,
     AppHeaderComponent,
     ProjectTimelineComponent,
     LecturerRegistrationCardComponent,

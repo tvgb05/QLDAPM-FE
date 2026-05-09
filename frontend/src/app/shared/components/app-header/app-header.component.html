@@ -8,6 +8,11 @@
     <div>
       <h1 class="font-bold text-lg uppercase tracking-wide leading-tight">Quản lý Đồ án</h1>
     </div>
+    
+    <nav *ngIf="(authService.currentRole$ | async) === 'student'" class="ml-8 hidden lg:flex items-center gap-6">
+      <a routerLink="/dashboard" routerLinkActive="text-yellow-300" class="text-sm font-bold text-blue-100 hover:text-white transition-colors">Lộ trình</a>
+      <a routerLink="/team-management" routerLinkActive="text-yellow-300" class="text-sm font-bold text-blue-100 hover:text-white transition-colors">Quản lý Nhóm</a>
+    </nav>
   </div>
 
 
